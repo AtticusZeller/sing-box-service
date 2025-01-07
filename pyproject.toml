@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 
 [project]
-name = "sing-box-service"
+name = "sing-box"
 description = "cross-platform sing-box-service manager."
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -24,6 +24,8 @@ maintainers = [{ name = "A.J.Zeller", email = "zhouge1831@gmail.com" }]
 
 dynamic = ["version"] # https://hatch.pypa.io/latest/config/metadata/#version
 dependencies = [
+    "psutil>=6.1.1",
+    "requests>=2.32.3",
     "typer>=0.15.1",
 ]
 
@@ -34,7 +36,7 @@ documentation = "https://atticuszz.github.io/sing-box-service/"
 Changelog = "https://github.com/atticuszz/sing-box-service/blob/main/CHANGELOG.md"
 
 [project.scripts] # build-backend config needed
-sbs = "sing_box_service:main" # equal to from python import main; then run main()
+sing-box = "sing_box_service:main" # equal to from python import main; then run main()
 # FROM: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 
 [tool.uv]
@@ -51,20 +53,11 @@ dev = [
     "ruff>=0.6.3",
     "mypy>=1.11.2",
     "pre-commit>=3.8.0",
-    "pytest>=8.3.2",
-    "pytest-sugar>=1.0.0",
-    "coverage>=7.6.1",
     "git-cliff>=2.6.1",
     "bump-my-version>=0.28.0",
     "typos>=1.26.8",
-]
-docs = [
- "mkdocs-git-revision-date-localized-plugin>=1.2.9",
-    "mkdocs-glightbox>=0.4.0",
-    "mkdocs-material>=9.5.39",
-    "mkdocs-obsidian-bridge>=1.1.1",
-    "mkdocs-publisher>=1.4.2",
-    "pymdown-extensions>=10.11.1",
+    "types-psutil>=6.1.0.20241221",
+    "types-requests>=2.32.0.20241016",
 ]
 
 [tool.hatch.version]
@@ -80,39 +73,6 @@ packages = ["src/sing_box_service"]
 [tool.mypy]
 strict = true
 exclude = ["venv", ".venv"]
-
-[tool.pytest.ini_options]
-# Set additional command line options for pytest=
-# -r= show extra test summary info
-# X= show extra info on xfailed tests
-# s= don't capture stdout (allow print statements)
-# --strict-config= any warnings about configuration are treated as errors
-# --strict-markers= treat unregistered markers as errors
-addopts = "-rXs --strict-config --strict-markers"
-xfail_strict = true         # Treat tests that are marked as xfail but pass as test failures
-filterwarnings = ["error"]  # Treat all warnings as errors
-pythonpath = "src/python_uv/"
-
-[tool.coverage.run]
-branch = true
-
-[tool.coverage.report]
-skip_covered = true
-show_missing = true
-precision = 2
-exclude_lines = [
-    'def __repr__',
-    'pragma= no cover',
-    'raise NotImplementedError',
-    'if TYPE_CHECKING=',
-    'if typing.TYPE_CHECKING=',
-    '@overload',
-    '@typing.overload',
-    '\(Protocol\)=$',
-    'typing.assert_never',
-    'assert_never',
-    'if __name__ == .__main__.=',
-]
 
 
 ## Linter and formatter
@@ -169,7 +129,7 @@ skip-magic-trailing-comma = true
 
 ## VCS
 [tool.git-cliff.remote.github]
-owner = "atticuszz"
+owner = "atticuszeller"
 repo = "sing-box-service"
 
 [tool.git-cliff.changelog]
@@ -249,7 +209,7 @@ sort_commits = "oldest"
 
 
 [tool.bumpversion]
-current_version = "0.0.38"
+current_version = "0.0.1"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
@@ -270,7 +230,7 @@ pre_commit_hooks = []
 post_commit_hooks = []
 
 [[tool.bumpversion.files]]
-filename = "src/python_uv/__init__.py"
+filename = "src/sing_box_service/__init__.py"
 
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"
