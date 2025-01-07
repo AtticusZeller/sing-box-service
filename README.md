@@ -6,7 +6,7 @@ cross-platform sing-box service manager
 
 ## Install
 
-### init UV
+### Init UV
 
 ```bash
 # root
@@ -17,7 +17,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ln -s $(which uv) /usr/local/bin/uv
 ```
 
-### add sing-box-service
+### Add sing-box
 
 ```bash
 sudo uv tool install sing-box-cli
@@ -26,5 +26,5 @@ sudo uv tool install sing-box-cli
 ## Run
 
 ```bash
-sudo uvx sing-box --help
+sudo uv tool run sing-box-cli --help
 ```
