@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.0.4 - 2025-01-07
+## 0.0.5 - 2025-01-07
+
+### 🚀 Features
+
+- Enable windows logs
 
 ### 🐛 Bug Fixes
 
