@@ -25,6 +25,7 @@ class Config:
             raise FileNotFoundError(f"❌ {bin_filename} not found in PATH")
 
         self.bin_path = Path(bin_path)
+        print(f"🔧 Using binary: {self.bin_path}")
 
         if self.is_windows:
             self.install_dir = Path(os.environ["ProgramFiles"]) / "sing-box"
@@ -65,7 +66,7 @@ class Config:
         try:
             response = requests.get(self.sub_url)
             response.raise_for_status()
-            self.config_file.write_text(response.text, encoding='utf-8')
+            self.config_file.write_text(response.text, encoding="utf-8")
             if not self.is_windows:
                 shutil.chown(self.config_file, user=self.user, group=self.user)
             print("✅ Configuration updated successfully.")
@@ -84,7 +85,7 @@ class Config:
 
     def show_config(self) -> None:
         print(f"📄 Configuration file: {self.config_file}")
-        print(self.config_file.read_text(encoding='utf-8'))
+        print(self.config_file.read_text(encoding="utf-8"))
 
     def show_subscription(self) -> None:
         if self.sub_url:
