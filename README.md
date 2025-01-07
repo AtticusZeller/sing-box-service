@@ -6,7 +6,15 @@ cross-platform sing-box service manager
 
 ## Install
 
-### Init UV
+### uv
+
+windows
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+linux
 
 ```bash
 # root
@@ -17,13 +25,21 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ln -s $(which uv) /usr/local/bin/uv
 ```
 
-### Add sing-box
+### sing-box
 
 ```bash
-sudo uv tool install sing-box-cli
+uv tool install sing-box-cli
 ```
 
 ## Run
+
+Windows in Admin powershell
+
+```powershell
+sing-box-cli --help
+```
+
+Linux
 
 ```bash
 sudo uv tool run sing-box-cli --help
