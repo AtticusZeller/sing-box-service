@@ -4,7 +4,6 @@ cross-platform sing-box service manager
 
 ![](assets/image.png)
 
-
 ## Install
 
 ### init UV
@@ -21,7 +20,7 @@ ln -s $(which uv) /usr/local/bin/uv
 ### add sing-box-service
 
 ```bash
-sudo uv tool install sing-box
+sudo uv tool install sing-box-cli
 ```
 
 ## Run

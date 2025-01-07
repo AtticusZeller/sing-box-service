@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 
 [project]
-name = "sing-box"
+name = "sing-box-cli"
 description = "cross-platform sing-box-service manager."
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -36,7 +36,7 @@ documentation = "https://atticuszz.github.io/sing-box-service/"
 Changelog = "https://github.com/atticuszz/sing-box-service/blob/main/CHANGELOG.md"
 
 [project.scripts] # build-backend config needed
-sing-box = "sing_box_service:main" # equal to from python import main; then run main()
+sing-box-cli = "sing_box_service:main" # equal to from python import main; then run main()
 # FROM: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 
 [tool.uv]
