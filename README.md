@@ -1,6 +1,6 @@
 # Sing-Box CLI
 
-cross-platform sing-box service manager
+🎤 Cross-platform sing-box service manager.
 
 ![](assets/image.png)
 
@@ -8,27 +8,31 @@ cross-platform sing-box service manager
 
 ### uv
 
-windows
+Windows
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-linux
+Linux
 
 ```bash
-# root
-sudo su
-# install as root
 curl -LsSf https://astral.sh/uv/install.sh | sh
-# create link
-ln -s $(which uv) /usr/local/bin/uv
 ```
 
 ### sing-box
 
+Windows
+
+```powershell
+uv tool install sing-box-cli
+```
+
+Linux
+
 ```bash
 uv tool install sing-box-cli
+sudo ln -sf $(which sing-box-cli) /usr/local/bin/
 ```
 
 ## Run
@@ -42,5 +46,5 @@ sing-box-cli --help
 Linux
 
 ```bash
-sudo uv tool run sing-box-cli --help
+sudo sing-box-cli --help
 ```
