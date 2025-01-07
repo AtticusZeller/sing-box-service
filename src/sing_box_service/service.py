@@ -2,7 +2,6 @@ import subprocess
 from pathlib import Path
 
 import psutil
-from rich import print
 
 from .config import Config
 
@@ -16,11 +15,6 @@ class ServiceManager:
 
     def check_service(self) -> bool:
         raise NotImplementedError()
-
-    def init_service(self) -> None:
-        if not self.check_service():
-            print("⌛ Creating service...")
-            self.create_service()
 
     def start(self) -> None:
         raise NotImplementedError()

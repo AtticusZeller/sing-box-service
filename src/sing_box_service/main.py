@@ -46,7 +46,7 @@ def service_start() -> None:
     cli = SingBoxCLI()
     cli.ensure_root()
     cli.config.init_directories()
-    cli.service.init_service()
+    cli.service.create_service()
     cli.service.start()
     print("✅ Service started.")
     print("🔗 Dashboard URL: https://metacubexd.pages.dev/")
@@ -67,7 +67,9 @@ def service_restart() -> None:
     """Restart sing-box service"""
     cli = SingBoxCLI()
     cli.ensure_root()
-    cli.service.init_service()
+    if not cli.service.check_service():
+        cli.service.create_service()
+        print("⌛ Service created successfully.")
     cli.service.restart()
     print("✅ Service restarted.")
     print("🔗 Dashboard URL: https://metacubexd.pages.dev/")
