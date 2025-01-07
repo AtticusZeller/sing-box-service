@@ -73,7 +73,7 @@ packages = ["src/sing_box_service"]
 [tool.mypy]
 strict = true
 exclude = ["venv", ".venv"]
-
+warn_unused_ignores=false
 
 ## Linter and formatter
 [tool.ruff]
