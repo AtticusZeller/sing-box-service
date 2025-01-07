@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.4 - 2025-01-07
+
+### 🐛 Bug Fixes
+
+- Show and update config encode error
+- Windows sys_platform
+- Remove init_service
+- Ignore mypy warn_unused_ignores
+- Replace schtask with raw pwsh
+
+### 📚 Documentation
+
+- Update README.md
+
+### ⚙️ Miscellaneous Tasks
+
+- Type ignore
+- Debug bin path
+
 ## 0.0.3 - 2025-01-07
 
 ### 🚀 Features
