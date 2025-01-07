@@ -203,6 +203,7 @@ WantedBy=multi-user.target
             return "Stopped"
 
     def logs(self) -> None:
+        print("⌛ Showing real-time logs (Press Ctrl+C to exit)")
         subprocess.run(["journalctl", "-u", "sing-box", "-o", "cat", "-f"])
 
     def disable(self) -> None:
