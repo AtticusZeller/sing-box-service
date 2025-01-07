@@ -1,8 +1,6 @@
 import subprocess
 from pathlib import Path
 
-import psutil
-
 from .config import Config
 
 
@@ -40,75 +38,88 @@ class WindowsServiceManager(ServiceManager):
     def create_service(self) -> None:
         start_script = self.config.install_dir / "start-singbox.ps1"
         script_content = f"""
-        Add-Type -Name Window -Namespace Console -MemberDefinition '
-        [DllImport("Kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
-        '
-        $console = [Console.Window]::GetConsoleWindow()
-        [Console.Window]::ShowWindow($console, 0)
+Add-Type -Name Window -Namespace Console -MemberDefinition '
+[DllImport("Kernel32.dll")]
+public static extern IntPtr GetConsoleWindow();
+[DllImport("user32.dll")]
+public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
+'
+$console = [Console.Window]::GetConsoleWindow()
+[Console.Window]::ShowWindow($console, 0)
 
-        Set-Location "{self.config.install_dir}"
-        & "{self.config.bin_path}" tools synctime -w -C "{self.config.install_dir}"
-        & "{self.config.bin_path}" run -C "{self.config.install_dir}"
-        """
+Set-Location "{self.config.install_dir}"
+& "{self.config.bin_path}" tools synctime -w -C "{self.config.install_dir}"
+& "{self.config.bin_path}" run -C "{self.config.install_dir}"
+"""
         start_script.write_text(script_content)
 
-        subprocess.run(
-            [
-                "schtasks",
-                "/create",
-                "/tn",
-                self.task_name,
-                "/tr",
-                f"powershell -ExecutionPolicy Bypass -File {start_script}",
-                "/sc",
-                "onlogon",
-                "/ru",
-                self.config.user,
-                "/rl",
-                "HIGHEST",
-                "/f",
-            ]
-        )
+        ps_command = f"""
+$action = New-ScheduledTaskAction `
+    -Execute "pwsh.exe" `
+    -Argument "-ExecutionPolicy Bypass -File `"{start_script}`""
+
+$trigger = New-ScheduledTaskTrigger -AtLogon
+$principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+
+Register-ScheduledTask -TaskName "{self.task_name}" `
+    -Action $action `
+    -Trigger $trigger `
+    -Principal $principal `
+    -Settings $settings `
+    -Force
+"""
+        subprocess.run(["pwsh", "-Command", ps_command], check=True)
 
     def check_service(self) -> bool:
-        try:
-            subprocess.run(
-                ["schtasks", "/query", "/tn", self.task_name],
-                capture_output=True,
-                check=True,
-            )
-            return True
-        except subprocess.CalledProcessError:
-            return False
+        ps_command = f"Get-ScheduledTask -TaskName '{self.task_name}' -ErrorAction SilentlyContinue"
+        result = subprocess.run(["pwsh", "-Command", ps_command], capture_output=True)
+        return result.returncode == 0
 
     def start(self) -> None:
-        subprocess.run(["schtasks", "/run", "/tn", self.task_name])
+        subprocess.run(
+            ["pwsh", "-Command", f"Start-ScheduledTask -TaskName '{self.task_name}'"]
+        )
 
     def stop(self) -> None:
-        subprocess.run(["schtasks", "/end", "/tn", self.task_name])
-        for proc in psutil.process_iter(["name"]):
-            if proc.info["name"] == "sing-box.exe":
-                proc.kill()
+        subprocess.run(
+            ["pwsh", "-Command", f"Stop-ScheduledTask -TaskName '{self.task_name}'"]
+        )
+        ps_command = "Get-Process | Where-Object { $_.ProcessName -eq 'sing-box' } | Stop-Process -Force"
+        subprocess.run(["pwsh", "-Command", ps_command])
 
     def restart(self) -> None:
         self.stop()
         self.start()
 
     def status(self) -> str:
-        try:
-            output = subprocess.check_output(
-                ["schtasks", "/query", "/tn", self.task_name]
-            )
-            return "Running" if "Running" in output.decode() else "Stopped"
-        except Exception:
-            return "Not installed"
+        ps_command = f"""
+$task = Get-ScheduledTask -TaskName '{self.task_name}' -ErrorAction SilentlyContinue
+if ($task) {{
+    $process = Get-Process | Where-Object {{ $_.Path -eq '{self.config.bin_path}' }}
+    if ($process) {{
+        "Running (PID: $($process.Id))"
+    }} else {{
+        "Stopped"
+    }}
+}} else {{
+    "Not installed"
+}}
+"""
+        result = subprocess.run(
+            ["pwsh", "-Command", ps_command], capture_output=True, text=True
+        )
+        return result.stdout.strip()
 
     def disable(self) -> None:
         self.stop()
-        subprocess.run(["schtasks", "/delete", "/tn", self.task_name, "/f"])
+        subprocess.run(
+            [
+                "pwsh",
+                "-Command",
+                f"Unregister-ScheduledTask -TaskName '{self.task_name}' -Confirm:$false",
+            ]
+        )
 
 
 class LinuxServiceManager(ServiceManager):
