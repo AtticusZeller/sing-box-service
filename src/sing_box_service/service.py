@@ -26,6 +26,9 @@ class ServiceManager:
     def status(self) -> str:
         raise NotImplementedError()
 
+    def logs(self) -> None:
+        raise NotImplementedError()
+
     def disable(self) -> None:
         raise NotImplementedError()
 
@@ -34,6 +37,7 @@ class WindowsServiceManager(ServiceManager):
     def __init__(self, config: Config):
         super().__init__(config)
         self.task_name = "sing-box"
+        self.log_file = self.config.install_dir / "sing-box.log"
 
     def create_service(self) -> None:
         start_script = self.config.install_dir / "start-singbox.ps1"
@@ -47,16 +51,29 @@ public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 $console = [Console.Window]::GetConsoleWindow()
 [Console.Window]::ShowWindow($console, 0)
 
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+chcp 65001 | Out-Null
+
 Set-Location "{self.config.install_dir}"
-& "{self.config.bin_path}" tools synctime -w -C "{self.config.install_dir}"
-& "{self.config.bin_path}" run -C "{self.config.install_dir}"
+
+if (Test-Path "{self.log_file}") {{
+    Clear-Content "{self.log_file}"
+}}
+
+try {{
+    & "{self.config.bin_path}" tools synctime -w -C "{self.config.install_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
+    & "{self.config.bin_path}" run -C "{self.config.install_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
+}} catch {{
+    $_ | Out-File -FilePath "{self.log_file}" -Append
+}}
 """
-        start_script.write_text(script_content)
+        start_script.write_text(script_content, encoding="utf-8")
 
         ps_command = f"""
 $action = New-ScheduledTaskAction `
     -Execute "pwsh.exe" `
-    -Argument "-ExecutionPolicy Bypass -File `"{start_script}`""
+    -Argument "-ExecutionPolicy Bypass -NoLogo -WindowStyle Hidden -File `"{start_script}`""
 
 $trigger = New-ScheduledTaskTrigger -AtLogon
 $principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
@@ -110,6 +127,19 @@ if ($task) {{
             ["pwsh", "-Command", ps_command], capture_output=True, text=True
         )
         return result.stdout.strip()
+
+    def logs(self) -> None:
+        if not self.log_file.exists():
+            print("⚠️ Log file not found")
+            return
+        try:
+            print("⌛ Showing real-time logs (Press Ctrl+C to exit)")
+            ps_command = (
+                f"Get-Content -Path '{self.log_file}' -Wait -Tail 50 -Encoding UTF8"
+            )
+            subprocess.run(["pwsh", "-Command", ps_command])
+        except KeyboardInterrupt:
+            return
 
     def disable(self) -> None:
         self.stop()
@@ -171,6 +201,9 @@ WantedBy=multi-user.target
             return "Running"
         except Exception:
             return "Stopped"
+
+    def logs(self) -> None:
+        subprocess.run(["journalctl", "-u", "sing-box", "-o", "cat", "-f"])
 
     def disable(self) -> None:
         self.stop()

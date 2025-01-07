@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 
 import typer
@@ -132,10 +131,7 @@ def config_show() -> None:
 def logs() -> None:
     """Show sing-box service logs"""
     cli = SingBoxCLI()
-    if cli.config.is_windows:
-        print("⚠️ Log viewing is not supported on Windows")
-    else:
-        subprocess.run(["journalctl", "-u", "sing-box", "-o", "cat", "-f"])
+    cli.service.logs()
 
 
 def main() -> None:
