@@ -35,6 +35,7 @@ class Config:
 
         self.config_file = self.install_dir / "config.json"
         self.subscription_file = self.install_dir / "subscription.txt"
+        self.cache_db = self.install_dir / "cache.db"
 
     def init_directories(self) -> None:
         self.install_dir.mkdir(parents=True, exist_ok=True)
@@ -93,3 +94,10 @@ class Config:
             print(self.sub_url)
         else:
             print("❌ No subscription URL found.")
+
+    def clean_cache(self) -> None:
+        if self.cache_db.exists():
+            self.cache_db.unlink()
+            print("🗑️ Cache database removed.")
+        else:
+            print("❌ Cache database not found.")

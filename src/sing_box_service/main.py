@@ -127,6 +127,13 @@ def config_show() -> None:
     cli.config.show_config()
 
 
+@config.command("clean_cache")
+def config_clean_cache() -> None:
+    """Clean cache database"""
+    cli = SingBoxCLI()
+    cli.config.clean_cache()
+
+
 @app.command()
 def logs() -> None:
     """Show sing-box service logs"""
