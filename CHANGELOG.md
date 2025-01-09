@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.6 - 2025-01-09
+
+### 🚀 Features
+
+- Add config clean_cache
+
+### 📚 Documentation
+
+- Update linux install and run
+
+### ⚙️ Miscellaneous Tasks
+
+- Update linux show logs prompt
+
 ## 0.0.5 - 2025-01-07
 
 ### 🚀 Features
