@@ -159,6 +159,7 @@ class LinuxServiceManager(ServiceManager):
         self.service_file = Path("/etc/systemd/system/sing-box.service")
 
     def create_service(self) -> None:
+        """systemctl list-units | grep -i network"""
         service_content = f"""
 [Unit]
 Description=sing-box service

@@ -2,11 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.0.6 - 2025-01-09
+## 0.0.7 - 2025-01-10
 
 ### 🚀 Features
 
 - Add config clean_cache
+
+### 🐛 Bug Fixes
+
+- Service start before network connection
 
 ### 📚 Documentation
 
