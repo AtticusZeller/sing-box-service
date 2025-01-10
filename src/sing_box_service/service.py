@@ -163,7 +163,7 @@ class LinuxServiceManager(ServiceManager):
 [Unit]
 Description=sing-box service
 Documentation=https://sing-box.sagernet.org
-After=network.target nss-lookup.target
+After=After=network.target network-online.target NetworkManager.service NetworkManager-wait-online.service
 
 [Service]
 Type=simple
