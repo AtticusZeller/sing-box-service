@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.0.8 - 2025-01-14
+## 0.0.9 - 2025-01-14
 
 ### 🚀 Features
 
@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 - Service start before network connection
 - Linux service After start condition
+- Remove tool synctime -w in  windows ,because newest sing-box has fixed ntp
 
 ### 📚 Documentation
 
