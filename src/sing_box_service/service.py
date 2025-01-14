@@ -164,7 +164,9 @@ class LinuxServiceManager(ServiceManager):
 [Unit]
 Description=sing-box service
 Documentation=https://sing-box.sagernet.org
-After=After=network.target network-online.target NetworkManager.service NetworkManager-wait-online.service
+After=network-online.target NetworkManager-wait-online.service nss-lookup.target
+Wants=network-online.target nss-lookup.target
+BindsTo=NetworkManager.service
 
 [Service]
 Type=simple
@@ -173,7 +175,6 @@ LimitNOFILE=1000000
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
 Restart=always
-ExecStartPre={self.config.bin_path} tools synctime -w -C {self.config.install_dir}
 ExecStart={self.config.bin_path} run -C {self.config.install_dir}
 ExecReload=/bin/kill -HUP $MAINPID
 
