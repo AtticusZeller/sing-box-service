@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.0.7 - 2025-01-10
+## 0.0.8 - 2025-01-14
 
 ### 🚀 Features
 
@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Service start before network connection
+- Linux service After start condition
 
 ### 📚 Documentation
 
