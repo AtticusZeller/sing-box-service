@@ -62,7 +62,6 @@ if (Test-Path "{self.log_file}") {{
 }}
 
 try {{
-    & "{self.config.bin_path}" tools synctime -w -C "{self.config.install_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
     & "{self.config.bin_path}" run -C "{self.config.install_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
 }} catch {{
     $_ | Out-File -FilePath "{self.log_file}" -Append
