@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.10 - 2025-01-15
+
+### 🐛 Bug Fixes
+
+- Systemd unit start condition in linux server and optimize the service priority
+
 ## 0.0.9 - 2025-01-14
 
 ### 🚀 Features
