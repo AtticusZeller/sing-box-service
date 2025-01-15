@@ -158,24 +158,36 @@ class LinuxServiceManager(ServiceManager):
         self.service_file = Path("/etc/systemd/system/sing-box.service")
 
     def create_service(self) -> None:
-        """systemctl list-units | grep -i network"""
+        """systemctl list-units | grep -i network
+        Refs:
+            1. https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Type
+            2. https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#Scheduling
+        """
         service_content = f"""
 [Unit]
 Description=sing-box service
 Documentation=https://sing-box.sagernet.org
-After=network-online.target NetworkManager-wait-online.service nss-lookup.target
-Wants=network-online.target nss-lookup.target
-BindsTo=NetworkManager.service
+After=network-online.target nss-lookup.target
 
 [Service]
-Type=simple
-LimitNPROC=500
-LimitNOFILE=1000000
+Type=exec
+LimitNOFILE=infinity
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
+
+# restart
 Restart=always
+RestartSec=2
+# start commands
 ExecStart={self.config.bin_path} run -C {self.config.install_dir}
 ExecReload=/bin/kill -HUP $MAINPID
+# IO
+IOSchedulingPriority=0
+IOSchedulingClass=realtime
+# CPU
+CPUSchedulingPolicy=rr
+CPUSchedulingPriority=99
+Nice=-20
 
 [Install]
 WantedBy=multi-user.target
