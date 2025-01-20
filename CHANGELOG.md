@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.11 - 2025-01-20
+
+### 🐛 Bug Fixes
+
+- Add working dir, clean_cache command would work.
+
 ## 0.0.10 - 2025-01-15
 
 ### 🐛 Bug Fixes
