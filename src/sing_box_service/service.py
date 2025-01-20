@@ -179,7 +179,7 @@ AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME 
 Restart=always
 RestartSec=2
 # start commands
-ExecStart={self.config.bin_path} run -C {self.config.install_dir}
+ExecStart={self.config.bin_path} run -C {self.config.install_dir} -D {self.config.install_dir}
 ExecReload=/bin/kill -HUP $MAINPID
 # IO
 IOSchedulingPriority=0
