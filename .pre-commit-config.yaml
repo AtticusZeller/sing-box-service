@@ -21,14 +21,14 @@ repos:
       - id: check-vcs-permalinks
     # spell check
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         files: \.(py|sh|rst|yml|yaml|md)$
         args: [--write-changes]
     # lint and format
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.6
+    rev: v0.9.4
     hooks:
       - id: ruff
         args: [ --fix ]
