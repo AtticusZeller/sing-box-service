@@ -1,0 +1,247 @@
+{
+  "log": {
+    "level": "warning",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns_direct",
+        "address": "h3://223.6.6.6/dns-query",
+        "detour": "direct"
+      },
+      {
+        "tag": "dns_proxy",
+        "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
+        "address_resolver": "dns_direct",
+        "client_subnet": "137.184.125.132",
+        "detour": "⚡San Francisco Hy2"
+      },
+      {
+        "tag": "dns_fakeip",
+        "address": "fakeip"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": "any",
+        "server": "dns_direct"
+      },
+      {
+        "rule_set": "dns-filter",
+        "action": "reject"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "server": "dns_fakeip"
+      },
+      {
+        "rule_set": "proxy-rule",
+        "server": "dns_proxy"
+      },
+      {
+        "rule_set": "direct-rule",
+        "server": "dns_direct"
+      }
+    ],
+    "final": "dns_proxy",
+    "reverse_mapping": true,
+    "cache_capacity": 4096,
+    "strategy": "prefer_ipv4",
+    "fakeip": {
+      "enabled": true,
+      "inet4_range": "198.18.0.0/15",
+      "inet6_range": "fc00::/18"
+    },
+    "independent_cache": true
+  },
+  "ntp": {
+    "enabled": true,
+    "interval": "30m0s",
+    "server": "time.tencent.com",
+    "write_to_system": true,
+    "server_port": 123
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "mtu": 1492,
+      "address": [
+        "172.16.0.1/30",
+        "fd00::1/126"
+      ],
+      "auto_route": true,
+      "strict_route": true,
+      "route_exclude_address_set": "geoip-cn",
+      "stack": "system"
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "selector",
+      "tag": "proxy",
+      "outbounds": [
+        "⚡San Francisco Hy2",
+        "🌩️San Francisco WS",
+        "🌟San Francisco WS",
+        "direct"
+      ],
+      "default": "⚡San Francisco Hy2"
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "vless",
+      "tag": "🌟San Francisco WS",
+      "tcp_fast_open": true,
+      "udp_fragment": true,
+      "server": "104.23.96.99",
+      "server_port": 2053,
+      "uuid": "6a5f528d-1641-406f-95b8-ee9c574d79b3",
+      "tls": {
+        "enabled": true,
+        "server_name": "cdn.atticux.me",
+        "min_version": "1.3",
+        "alpn": "h3"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/ws",
+        "max_early_data": 2048,
+        "headers": {
+          "Host": "cdn.atticux.me"
+        }
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "🌩️San Francisco WS",
+      "server": "104.23.96.99",
+      "server_port": 443,
+      "uuid": "717f9e5c-9922-49a0-aa12-3fa17d63a7a8",
+      "tls": {
+        "enabled": true,
+        "server_name": "worker.proxy.atticux.me"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/?ed=2560",
+        "headers": {
+          "Host": "worker.proxy.atticux.me"
+        }
+      }
+    },
+    {
+      "type": "hysteria2",
+      "tag": "⚡San Francisco Hy2",
+      "tcp_fast_open": true,
+      "tcp_multi_path": false,
+      "udp_fragment": true,
+      "server": "magic.atticux.me",
+      "server_ports": [
+        "40000:60000"
+      ],
+      "hop_interval": "30s",
+      "up_mbps": 80,
+      "down_mbps": 125,
+      "password": "UptVghIUI1djt/K2wwfrYQ==",
+      "tls": {
+        "enabled": true,
+        "server_name": "magic.atticux.me",
+        "min_version": "1.3",
+        "alpn": "h3"
+      }
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "inbound": "tun-in",
+        "action": "sniff"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "proxy-rule",
+        "outbound": "proxy"
+      },
+      {
+        "protocol": "ssh",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "direct-rule",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "geoip-cn",
+        "outbound": "direct"
+      }
+    ],
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "proxy-rule",
+        "format": "binary",
+        "url": "https://raw.gh.atticux.me/AtticusZeller/rule-sets/main/binary/proxy.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "direct-rule",
+        "format": "binary",
+        "url": "https://raw.gh.atticux.me/AtticusZeller/rule-sets/main/binary/direct.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geoip-cn",
+        "format": "binary",
+        "url": "https://raw.gh.atticux.me/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "dns-filter",
+        "format": "binary",
+        "url": "https://raw.gh.atticux.me/REIJI007/AdBlock_Rule_For_Sing-box/main/adblock_reject.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      }
+    ],
+    "final": "proxy",
+    "auto_detect_interface": true
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "path": "cache.db",
+      "store_fakeip": true,
+      "store_rdrc": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "default_mode": "Rule",
+      "access_control_allow_origin": [
+        "http://127.0.0.1",
+        "https://metacubexd.atticux.me"
+      ],
+      "access_control_allow_private_network": true
+    }
+  }
+}
