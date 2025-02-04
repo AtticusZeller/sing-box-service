@@ -2,49 +2,49 @@
 # `pre-commit install` to set up the git hook scripts
 # `pre-commit autoupdate` to update repos
 # `pre-commit run --all-files` run hooks for all file
-exclude: (^|/)\..* # exclude hidden files or folder
+
+# exclude: (^|/)\..*
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: check-toml
       - id: check-yaml
-        args: ["--unsafe"]
+      - id: sort-simple-yaml
       - id: check-json
+      - id: pretty-format-json
+        args: [--autofix, --no-sort-keys]
       - id: check-added-large-files
-        args: ["--maxkb=51200"]
-      - id: debug-statements
+        args: [--maxkb=51200]
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: detect-private-key
-      - id: destroyed-symlinks
-      - id: check-vcs-permalinks
-    # spell check
+
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
       - id: codespell
-        files: \.(py|sh|rst|yml|yaml|md)$
         args: [--write-changes]
-    # lint and format
+        files: \.(py|sh|json|yml|yaml|md)$
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.4
     hooks:
       - id: ruff
-        args: [ --fix ]
+        args: [--fix]
       - id: ruff-format
-  # - repo: https://github.com/hadolint/hadolint
-  #   rev: v2.12.0
-  #   hooks:
-  #     - id: hadolint
-  #       name: Lint Dockerfiles
-  #       description: Runs hadolint to lint Dockerfiles
-  #       language: system
-  #       types: ["dockerfile"]
-  #       entry: hadolint
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.5.27
+    hooks:
+      # Update the uv lockfile
+      - id: uv-lock
+
 ci:
-  # Settings for the https://pre-commit.ci/ continuous integration service
-  autofix_prs: True
   autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks
+  # Settings for the https://pre-commit.ci/ continuous integration service
+  autofix_prs: true
   autoupdate_commit_msg: ⬆ [pre-commit.ci] pre-commit autoupdate
   autoupdate_schedule: monthly

@@ -547,7 +547,6 @@ wheels = [
 
 [[package]]
 name = "sing-box-cli"
-version = "0.0.8"
 source = { editable = "." }
 dependencies = [
     { name = "psutil", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
