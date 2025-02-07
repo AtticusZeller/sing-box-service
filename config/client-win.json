@@ -147,7 +147,7 @@
       "server_ports": [
         "40000:60000"
       ],
-      "hop_interval": "30s",
+      "hop_interval": "300s",
       "up_mbps": 80,
       "down_mbps": 125,
       "password": "UptVghIUI1djt/K2wwfrYQ==",
