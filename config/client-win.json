@@ -148,8 +148,8 @@
         "40000:60000"
       ],
       "hop_interval": "300s",
-      "up_mbps": 80,
-      "down_mbps": 125,
+      "up_mbps": 150,
+      "down_mbps": 400,
       "password": "UptVghIUI1djt/K2wwfrYQ==",
       "tls": {
         "enabled": true,
