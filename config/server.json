@@ -98,7 +98,8 @@
           "geosite-google",
           "geosite-youtube",
           "geosite-openai",
-          "geosite-instagram"
+          "geosite-instagram",
+          "geosite-microsoft"
         ],
         "outbound": "warp-out"
       },
@@ -157,6 +158,13 @@
         "tag": "geosite-instagram",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-instagram.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-microsoft",
+        "format": "binary",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-microsoft.srs",
         "download_detour": "direct"
       }
     ],
