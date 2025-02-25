@@ -89,7 +89,8 @@
     "rules": [
       {
         "domain_suffix": [
-          "kaggle.com"
+          "kaggle.com",
+          "scholar.google.com"
         ],
         "outbound": "direct"
       },
