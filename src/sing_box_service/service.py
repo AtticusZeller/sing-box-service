@@ -36,7 +36,7 @@ class ServiceManager:
 class WindowsServiceManager(ServiceManager):
     def __init__(self, config: Config):
         super().__init__(config)
-        self.task_name = "sing-box"
+        self.task_name = "sing-box-service"
         self.log_file = self.config.install_dir / "sing-box.log"
 
     def create_service(self) -> None:
@@ -76,7 +76,7 @@ $action = New-ScheduledTaskAction `
 
 $trigger = New-ScheduledTaskTrigger -AtLogon
 $principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable
 
 Register-ScheduledTask -TaskName "{self.task_name}" `
     -Action $action `
