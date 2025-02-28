@@ -48,7 +48,7 @@ def service_start() -> None:
     cli.service.create_service()
     cli.service.start()
     print("✅ Service started.")
-    print("🔗 Dashboard URL: https://metacubexd.pages.dev/")
+    print("🔗 Dashboard URL: https://metacubexd.atticux.me/")
     print("🔌 Default API: http://127.0.0.1:9090")
 
 
@@ -71,7 +71,7 @@ def service_restart() -> None:
         print("⌛ Service created successfully.")
     cli.service.restart()
     print("✅ Service restarted.")
-    print("🔗 Dashboard URL: https://metacubexd.pages.dev/")
+    print("🔗 Dashboard URL: https://metacubexd.atticux.me/")
     print("🔌 Default API: http://127.0.0.1:9090")
 
 
