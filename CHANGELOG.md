@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.12 - 2025-02-28
+
+### 🐛 Bug Fixes
+
+- Pre-commit pretty json replace unicode emoji with ascii
+- Increase hop interval
+- Add RunOnlyIfNetworkAvailable
+- Dashboard url
+
+### ⚙️ Miscellaneous Tasks
+
+- Update pre-commit and gitignore
+- Add configs template
+- Add server client config
+- Update brutal limit
+- Add microsoft rules
+- Add rule
+
 ## 0.0.11 - 2025-01-20
 
 ### 🐛 Bug Fixes
