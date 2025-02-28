@@ -88,6 +88,9 @@
   "route": {
     "rules": [
       {
+        "action": "sniff"
+      },
+      {
         "domain_suffix": [
           "kaggle.com",
           "scholar.google.com"
