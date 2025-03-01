@@ -109,7 +109,7 @@
       "tag": "🌟San Francisco WS",
       "tcp_fast_open": true,
       "udp_fragment": true,
-      "server": "172.66.45.88",
+      "server": "104.19.255.210",
       "server_port": 2053,
       "uuid": "6a5f528d-1641-406f-95b8-ee9c574d79b3",
       "tls": {
