@@ -15,7 +15,7 @@
         "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
         "address_resolver": "dns_direct",
         "client_subnet": "137.184.125.132",
-        "detour": "⚡San Francisco Hy2"
+        "detour": "proxy"
       },
       {
         "tag": "dns_fakeip",
@@ -90,7 +90,7 @@
       "tag": "🌟San Francisco WS",
       "tcp_fast_open": true,
       "udp_fragment": true,
-      "server": "104.23.96.99",
+      "server": "104.19.255.210",
       "server_port": 2053,
       "uuid": "6a5f528d-1641-406f-95b8-ee9c574d79b3",
       "tls": {
