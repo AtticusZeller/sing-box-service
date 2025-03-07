@@ -6,14 +6,20 @@
   "dns": {
     "servers": [
       {
-        "tag": "dns_direct",
+        "tag": "dns_resolver",
         "address": "h3://223.6.6.6/dns-query",
+        "detour": "direct"
+      },
+      {
+        "tag": "dns_direct",
+        "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
+        "address_resolver": "dns_resolver",
         "detour": "direct"
       },
       {
         "tag": "dns_proxy",
         "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
-        "address_resolver": "dns_direct",
+        "address_resolver": "dns_resolver",
         "client_subnet": "137.184.125.132",
         "detour": "proxy"
       },
@@ -51,6 +57,7 @@
     "reverse_mapping": true,
     "cache_capacity": 4096,
     "strategy": "prefer_ipv4",
+    "client_subnet": "180.110.148.0/24",
     "fakeip": {
       "enabled": true,
       "inet4_range": "198.18.0.0/15",
@@ -111,7 +118,7 @@
     {
       "type": "vless",
       "tag": "🌩️San Francisco WS",
-      "server": "104.23.96.99",
+      "server": "104.24.13.124",
       "server_port": 443,
       "uuid": "717f9e5c-9922-49a0-aa12-3fa17d63a7a8",
       "tls": {
