@@ -58,6 +58,7 @@ dev = [
     "typos>=1.26.8",
     "types-psutil>=6.1.0.20241221",
     "types-requests>=2.32.0.20241016",
+    "pytest>=8.3.5",
 ]
 
 [tool.hatch.version]

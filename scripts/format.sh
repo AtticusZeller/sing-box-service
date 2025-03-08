@@ -1,5 +1,5 @@
 #!/bin/sh -e
 set -x
 
-ruff check src --fix
-ruff format src
+ruff check src tests --fix
+ruff format src tests
