@@ -59,18 +59,31 @@ class Config:
         return self.subscription_file.read_text().strip()
 
     def update_config(self) -> bool:
+        """download configuration from subscription URL and show differences"""
         if not self.sub_url:
             print("❌ No valid subscription URL found.")
             return False
 
+        current_config = (
+            self.config_file.read_text(encoding="utf-8")
+            if self.config_file.exists()
+            else "{}"
+        )
         print(f"⌛ Updating configuration from {self.sub_url}")
         try:
             response = requests.get(self.sub_url)
             response.raise_for_status()
-            self.config_file.write_text(response.text, encoding="utf-8")
+            new_config = response.text
+            self.config_file.write_text(new_config, encoding="utf-8")
             if not self.is_windows:
                 shutil.chown(self.config_file, user=self.user, group=self.user)
-            print("✅ Configuration updated successfully.")
+
+            if current_config == new_config:
+                print("📄 Configuration is up to date.")
+            else:
+                show_diff_config(current_config, new_config)
+                print("🔄 Configuration updated successfully")
+
             return True
         except Exception as e:
             print(f"❌ Failed to update configuration: {e}")
@@ -101,3 +114,30 @@ class Config:
             print("🗑️ Cache database removed.")
         else:
             print("❌ Cache database not found.")
+
+
+def show_diff_config(current_config: str, new_config: str) -> None:
+    print("📄 Configuration differences:")
+    from difflib import unified_diff
+
+    diff = list(
+        unified_diff(
+            current_config.splitlines(),
+            new_config.splitlines(),
+            fromfile="old",
+            tofile="new",
+            lineterm="",
+        )
+    )
+
+    for line in diff:
+        if line.startswith("+"):
+            print(f"[green]{line}[/green]")
+        elif line.startswith("-"):
+            print(f"[red]{line}[/red]")
+        elif line.startswith("@@"):
+            print(f"[blue]{line}[/blue]")
+        elif line.startswith(("---", "+++")):
+            print(f"[dim]{line}[/dim]")
+        else:
+            print(f"[white]{line}[/white]")
