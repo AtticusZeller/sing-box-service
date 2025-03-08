@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.13 - 2025-03-08
+
+### 🚀 Features
+
+- Show diff after updating config
+
+### 📚 Documentation
+
+- Add sniff action
+- Update cloudflare ip
+- Client-server config
+- Update config
+- Update ntp server
+
+### 🧪 Testing
+
+- Add tests as scripts target
+
 ## 0.0.12 - 2025-02-28
 
 ### 🐛 Bug Fixes
