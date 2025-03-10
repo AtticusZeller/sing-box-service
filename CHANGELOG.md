@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.15 - 2025-03-10
+
+### 🚀 Features
+
+- Add version command
+- Show config file path while invoking command
+
+### 🐛 Bug Fixes
+
+- Remove service file while disable service
+- Potential crash while init directory
+- Redundant logs
+- Logs info
+
+### 🚜 Refactor
+
+- Remove update command
+- Config info
+
+### 📚 Documentation
+
+- Fix function docstring
+
 ## 0.0.14 - 2025-03-10
 
 ### 🐛 Bug Fixes
