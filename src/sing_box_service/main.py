@@ -39,8 +39,8 @@ class SingBoxCLI:
                 sys.exit(1)
 
 
-@service.command("start")
-def service_start() -> None:
+@service.command("enable")
+def service_enable() -> None:
     """Start sing-box service"""
     cli = SingBoxCLI()
     cli.ensure_root()
@@ -52,13 +52,14 @@ def service_start() -> None:
     print("🔌 Default API: http://127.0.0.1:9090")
 
 
-@service.command("stop")
-def service_stop() -> None:
-    """Stop sing-box service"""
+@service.command("disable")
+def service_disable() -> None:
+    """Disable sing-box service autostart"""
     cli = SingBoxCLI()
     cli.ensure_root()
     cli.service.stop()
-    print("✋ Service stopped.")
+    cli.service.disable()
+    print("✋ Autostart disabled.")
 
 
 @service.command("restart")
@@ -75,6 +76,15 @@ def service_restart() -> None:
     print("🔌 Default API: http://127.0.0.1:9090")
 
 
+@service.command("stop")
+def service_stop() -> None:
+    """Stop sing-box service"""
+    cli = SingBoxCLI()
+    cli.ensure_root()
+    cli.service.stop()
+    print("✋ Service stopped.")
+
+
 @service.command("status")
 def service_status() -> None:
     """Check service status"""
@@ -84,14 +94,11 @@ def service_status() -> None:
     print(f"🏃 Service status: {status}")
 
 
-@service.command("disable")
-def service_disable() -> None:
-    """Disable sing-box service autostart"""
+@service.command("logs")
+def service_logs() -> None:
+    """Show sing-box service logs"""
     cli = SingBoxCLI()
-    cli.ensure_root()
-    cli.service.stop()
-    cli.service.disable()
-    print("✋ Autostart disabled.")
+    cli.service.logs()
 
 
 @config.command("add-sub")
@@ -104,6 +111,7 @@ def config_add_sub(url: str) -> None:
             cli.service.restart()
 
 
+# TODO: move to restart
 @config.command("update")
 def config_update() -> None:
     """Update configuration from subscription URL"""
@@ -135,10 +143,13 @@ def config_clean_cache() -> None:
 
 
 @app.command()
-def logs() -> None:
-    """Show sing-box service logs"""
+def version() -> None:
+    """Show version"""
+    from . import __version__
+
     cli = SingBoxCLI()
-    cli.service.logs()
+    print(f"🔖 sing-box-cli {__version__}")
+    print(f"📦 {cli.service.version()}")
 
 
 def main() -> None:

@@ -32,6 +32,9 @@ class ServiceManager:
     def disable(self) -> None:
         raise NotImplementedError()
 
+    def version(self) -> str:
+        raise NotImplementedError()
+
 
 class WindowsServiceManager(ServiceManager):
     def __init__(self, config: Config):
@@ -150,6 +153,10 @@ if ($task) {{
             ]
         )
 
+    def version(self) -> str:
+        result = subprocess.run([self.config.bin_path, "version"], capture_output=True)
+        return result.stdout.decode("utf-8").strip()
+
 
 class LinuxServiceManager(ServiceManager):
     def __init__(self, config: Config):
@@ -222,3 +229,7 @@ WantedBy=multi-user.target
     def disable(self) -> None:
         self.stop()
         subprocess.run(["systemctl", "disable", self.service_name])
+
+    def version(self) -> str:
+        result = subprocess.run([self.config.bin_path, "version"], capture_output=True)
+        return result.stdout.decode("utf-8").strip()
