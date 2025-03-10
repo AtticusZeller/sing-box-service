@@ -229,6 +229,8 @@ WantedBy=multi-user.target
     def disable(self) -> None:
         self.stop()
         subprocess.run(["systemctl", "disable", self.service_name])
+        if self.service_file.exists():
+            self.service_file.unlink()
 
     def version(self) -> str:
         result = subprocess.run([self.config.bin_path, "version"], capture_output=True)

@@ -41,7 +41,7 @@ class SingBoxCLI:
 
 @service.command("enable")
 def service_enable() -> None:
-    """Enable sing-box service"""
+    """Create sing-box service, enable autostart and start service"""
     cli = SingBoxCLI()
     cli.ensure_root()
     cli.config.init_directories()
@@ -54,7 +54,7 @@ def service_enable() -> None:
 
 @service.command("disable")
 def service_disable() -> None:
-    """Disable sing-box service autostart"""
+    """Stop service, disable sing-box service autostart and remove service"""
     cli = SingBoxCLI()
     cli.ensure_root()
     cli.service.stop()
