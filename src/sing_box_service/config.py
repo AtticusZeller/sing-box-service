@@ -36,7 +36,7 @@ class Config:
         self.config_file = self.install_dir / "config.json"
         self.subscription_file = self.install_dir / "subscription.txt"
         self.cache_db = self.install_dir / "cache.db"
-        print(f"📜 Using configuration: {self.config_file}")
+        print(f"📄 Using configuration: {self.config_file}")
 
     def init_directories(self) -> bool:
         try:
@@ -104,7 +104,6 @@ class Config:
         return True
 
     def show_config(self) -> None:
-        print(f"📄 Configuration file: {self.config_file}")
         print(self.config_file.read_text(encoding="utf-8"))
 
     def show_subscription(self) -> None:
