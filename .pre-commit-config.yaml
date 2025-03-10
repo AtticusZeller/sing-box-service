@@ -28,20 +28,6 @@ repos:
         args: [--write-changes]
         files: \.(py|sh|json|yml|yaml|md)$
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    # uv version.
-    rev: 0.6.3
-    hooks:
-      # Update the uv lockfile
-      - id: uv-lock
-
 ci:
   autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks
   # Settings for the https://pre-commit.ci/ continuous integration service
