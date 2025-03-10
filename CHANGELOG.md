@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.14 - 2025-03-10
+
+### 🐛 Bug Fixes
+
+- Linux install dir using ~/.config
+
 ## 0.0.13 - 2025-03-08
 
 ### 🚀 Features
