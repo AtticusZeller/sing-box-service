@@ -2,7 +2,7 @@
 
 🎤 Cross-platform sing-box service manager.
 
-![](assets/image.png)
+![help](assets/image.png)
 
 ## Install
 
