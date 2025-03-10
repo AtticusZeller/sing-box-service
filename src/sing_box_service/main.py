@@ -132,7 +132,7 @@ def config_show_sub() -> None:
 
 @config.command("show")
 def config_show() -> None:
-    """Show configuration"""
+    """Show configuration file"""
     cli = SingBoxCLI()
     cli.config.show_config()
 
