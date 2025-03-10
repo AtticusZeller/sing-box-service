@@ -65,13 +65,17 @@ def service_disable() -> None:
 
 @service.command("restart")
 def service_restart() -> None:
-    """Restart sing-box service"""
+    """Restart sing-box service, update configuration if needed, create service if not exists"""
     cli = SingBoxCLI()
     cli.ensure_root()
     if not cli.service.check_service():
         cli.service.create_service()
         print("⌛ Service created successfully.")
-    cli.service.restart()
+    if cli.config.update_config():
+        cli.service.restart()
+    else:
+        print("❌ Failed to update configuration.")
+        typer.Exit(1)
     print("✅ Service restarted.")
     print("🔗 Dashboard URL: https://metacubexd.atticux.me/")
     print("🔌 Default API: http://127.0.0.1:9090")
@@ -108,18 +112,15 @@ def config_add_sub(url: str) -> None:
     cli = SingBoxCLI()
     cli.ensure_root()
     if cli.config.add_subscription(url):
+        # restart service if subscription is updated
+        if not cli.service.check_service():
+            cli.service.create_service()
+            print("⌛ Service created successfully.")
         if cli.config.update_config():
             cli.service.restart()
-
-
-# TODO: move to restart
-@config.command("update")
-def config_update() -> None:
-    """Update configuration from subscription URL"""
-    cli = SingBoxCLI()
-    cli.ensure_root()
-    if cli.config.update_config():
-        cli.service.restart()
+        else:
+            print("❌ Failed to update configuration.")
+            typer.Exit(1)
 
 
 @config.command("show-sub")
