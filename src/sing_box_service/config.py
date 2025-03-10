@@ -31,7 +31,7 @@ class Config:
             self.install_dir = Path(os.environ["ProgramFiles"]) / "sing-box"
         else:
             self.user_home = Path(os.path.expanduser(f"~{self.user}"))
-            self.install_dir = self.user_home / "proxy/sing-box"
+            self.install_dir = self.user_home / ".config/sing-box"
 
         self.config_file = self.install_dir / "config.json"
         self.subscription_file = self.install_dir / "subscription.txt"
