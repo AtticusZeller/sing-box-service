@@ -24,6 +24,8 @@ class SingBoxCLI:
             if self.config.is_windows
             else LinuxServiceManager(self.config)
         )
+        if not self.config.init_directories():
+            typer.Exit(1)
 
     def ensure_root(self) -> None:
         """https://gist.github.com/RDCH106/fdd419ef7dd803932b16056aab1d2300"""
@@ -44,7 +46,6 @@ def service_enable() -> None:
     """Create sing-box service, enable autostart and start service"""
     cli = SingBoxCLI()
     cli.ensure_root()
-    cli.config.init_directories()
     cli.service.create_service()
     cli.service.start()
     print("✅ Service started.")

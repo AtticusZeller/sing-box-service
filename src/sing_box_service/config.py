@@ -38,20 +38,25 @@ class Config:
         self.cache_db = self.install_dir / "cache.db"
         print(f"📜 Using configuration: {self.config_file}")
 
-    def init_directories(self) -> None:
-        self.install_dir.mkdir(parents=True, exist_ok=True)
-        if not self.config_file.exists():
-            self.config_file.write_text("{}")
-            print(f"📁 Created empty config file: {self.config_file}")
+    def init_directories(self) -> bool:
+        try:
+            self.install_dir.mkdir(parents=True, exist_ok=True)
+            if not self.config_file.exists():
+                self.config_file.write_text("{}")
+                print(f"📁 Created empty config file: {self.config_file}")
 
-        if not self.subscription_file.exists():
-            self.subscription_file.touch()
-            print(f"📁 Created subscription file: {self.subscription_file}")
+            if not self.subscription_file.exists():
+                self.subscription_file.touch()
+                print(f"📁 Created subscription file: {self.subscription_file}")
 
-        if not self.is_windows:
-            shutil.chown(self.install_dir, user=self.user, group=self.user)
-            shutil.chown(self.config_file, user=self.user, group=self.user)
-            shutil.chown(self.subscription_file, user=self.user, group=self.user)
+            if not self.is_windows:
+                shutil.chown(self.install_dir, user=self.user, group=self.user)
+                shutil.chown(self.config_file, user=self.user, group=self.user)
+                shutil.chown(self.subscription_file, user=self.user, group=self.user)
+        except Exception as e:
+            print(f"❌ Failed to initialize directories: {e}")
+            return False
+        return True
 
     @property
     def sub_url(self) -> str:
