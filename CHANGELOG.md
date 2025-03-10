@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.16 - 2025-03-10
+
+### 🐛 Bug Fixes
+
+- Start, restart logs
+
+### 📚 Documentation
+
+- Update --help image of README.md
+- Remove example
+
 ## 0.0.15 - 2025-03-10
 
 ### 🚀 Features
