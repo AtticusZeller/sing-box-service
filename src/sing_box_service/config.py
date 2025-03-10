@@ -25,7 +25,6 @@ class Config:
             raise FileNotFoundError(f"❌ {bin_filename} not found in PATH")
 
         self.bin_path = Path(bin_path)
-        print(f"🔧 Using binary: {self.bin_path}")
 
         if self.is_windows:
             self.install_dir = Path(os.environ["ProgramFiles"]) / "sing-box"
@@ -36,7 +35,8 @@ class Config:
         self.config_file = self.install_dir / "config.json"
         self.subscription_file = self.install_dir / "subscription.txt"
         self.cache_db = self.install_dir / "cache.db"
-        print(f"📄 Using configuration: {self.config_file}")
+
+        print(self)
 
     def init_directories(self) -> bool:
         try:
@@ -88,7 +88,6 @@ class Config:
                 print("📄 Configuration is up to date.")
             else:
                 show_diff_config(current_config, new_config)
-                print("🔄 Configuration updated successfully")
 
             return True
         except Exception as e:
@@ -99,7 +98,7 @@ class Config:
         if not url.startswith(("http://", "https://")):
             print("❌ Invalid URL format.")
             return False
-        self.subscription_file.write_text(url)
+        self.subscription_file.write_text(url.strip())
         print("📁 Subscription added successfully.")
         return True
 
@@ -108,8 +107,7 @@ class Config:
 
     def show_subscription(self) -> None:
         if self.sub_url:
-            print("🔗 Current subscription URL:")
-            print(self.sub_url)
+            print(f"🔗 Current subscription URL: {self.sub_url}")
         else:
             print("❌ No subscription URL found.")
 
@@ -119,6 +117,16 @@ class Config:
             print("🗑️ Cache database removed.")
         else:
             print("❌ Cache database not found.")
+
+    def __str__(self) -> str:
+        info = (
+            f"🔧 Using binary: {self.bin_path}\n"
+            f"📄 Using configuration: {self.config_file}"
+        )
+
+        if self.is_windows:
+            info += f"\n📁 Using installation directory: {self.install_dir}"
+        return info
 
 
 def show_diff_config(current_config: str, new_config: str) -> None:
