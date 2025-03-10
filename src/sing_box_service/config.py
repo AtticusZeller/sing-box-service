@@ -36,6 +36,7 @@ class Config:
         self.config_file = self.install_dir / "config.json"
         self.subscription_file = self.install_dir / "subscription.txt"
         self.cache_db = self.install_dir / "cache.db"
+        print(f"📜 Using configuration: {self.config_file}")
 
     def init_directories(self) -> None:
         self.install_dir.mkdir(parents=True, exist_ok=True)
