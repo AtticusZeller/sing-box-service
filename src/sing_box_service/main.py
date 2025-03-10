@@ -48,7 +48,7 @@ def service_enable() -> None:
     cli.ensure_root()
     cli.service.create_service()
     cli.service.start()
-    print("♻️ Service started.")
+    print("🔥 Service started.")
     print("🔗 Dashboard URL: https://metacubexd.atticux.me/")
     print("🔌 Default API: http://127.0.0.1:9090")
 
@@ -75,7 +75,7 @@ def service_restart() -> None:
     else:
         print("❌ Failed to update configuration.")
         typer.Exit(1)
-    print("♻️ Service restarted.")
+    print("🔥 Service restarted.")
     print("🔗 Dashboard URL: https://metacubexd.atticux.me/")
     print("🔌 Default API: http://127.0.0.1:9090")
 
