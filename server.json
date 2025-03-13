@@ -103,7 +103,8 @@
           "geosite-youtube",
           "geosite-openai",
           "geosite-instagram",
-          "geosite-microsoft"
+          "geosite-microsoft",
+          "geosite-anthropic"
         ],
         "outbound": "warp-out"
       },
@@ -169,6 +170,13 @@
         "tag": "geosite-microsoft",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-microsoft.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-anthropic",
+        "format": "binary",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-anthropic.srs",
         "download_detour": "direct"
       }
     ],
