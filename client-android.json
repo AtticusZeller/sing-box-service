@@ -142,13 +142,13 @@
       "uuid": "717f9e5c-9922-49a0-aa12-3fa17d63a7a8",
       "tls": {
         "enabled": true,
-        "server_name": "worker.proxy.atticux.me"
+        "server_name": "worker.magic.atticux.me"
       },
       "transport": {
         "type": "ws",
         "path": "/?ed=2560",
         "headers": {
-          "Host": "worker.proxy.atticux.me"
+          "Host": "worker.magic.atticux.me"
         }
       }
     },
