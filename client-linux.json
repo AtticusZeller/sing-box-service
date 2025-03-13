@@ -111,7 +111,7 @@
       "udp_fragment": true,
       "server": "104.19.255.210",
       "server_port": 2053,
-      "uuid": "6a5f528d-1641-406f-95b8-ee9c574d79b3",
+      "uuid": "6a5f528d-1641-407f-95b8-ee9c574d79b3",
       "tls": {
         "enabled": true,
         "server_name": "cdn.atticux.me",
@@ -158,7 +158,7 @@
       "hop_interval": "300s",
       "up_mbps": 150,
       "down_mbps": 400,
-      "password": "UptVghIUI1djt/K2wwfrYQ==",
+      "password": "UptVghIUI1djt/K3wwfrYQ==",
       "tls": {
         "enabled": true,
         "server_name": "magic.atticux.me",
