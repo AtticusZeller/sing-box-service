@@ -67,7 +67,7 @@
       "type": "wireguard",
       "tag": "warp-out",
       "mtu": 1280,
-      "system":true,
+      "system": true,
       "address": [
         "104.23.96.99/32",
         "104.23.99.59/32"
