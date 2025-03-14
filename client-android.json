@@ -76,7 +76,7 @@
       ],
       "auto_route": true,
       "strict_route": true,
-      "stack": "system",
+      "stack": "mixed",
       "platform": {
         "http_proxy": {
           "enabled": true,
