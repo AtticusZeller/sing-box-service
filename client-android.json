@@ -115,6 +115,7 @@
       "type": "vless",
       "tag": "🌟San Francisco WS",
       "tcp_fast_open": true,
+      "tcp_multi_path": true,
       "udp_fragment": true,
       "server": "104.19.255.210",
       "server_port": 2053,
@@ -156,7 +157,7 @@
       "type": "hysteria2",
       "tag": "⚡San Francisco Hy2",
       "tcp_fast_open": true,
-      "tcp_multi_path": false,
+      "tcp_multi_path": true,
       "udp_fragment": true,
       "server": "magic.atticux.me",
       "server_ports": [

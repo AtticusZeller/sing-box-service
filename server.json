@@ -10,6 +10,7 @@
       "listen": "::",
       "listen_port": 8443,
       "tcp_fast_open": true,
+      "tcp_multi_path": true,
       "udp_fragment": true,
       "users": [
         {
@@ -32,6 +33,9 @@
       "tag": "vless-in",
       "listen": "::",
       "listen_port": 2053,
+      "tcp_fast_open": true,
+      "tcp_multi_path": true,
+      "udp_fragment": true,
       "users": [
         {
           "name": "7zfzp3n5",
