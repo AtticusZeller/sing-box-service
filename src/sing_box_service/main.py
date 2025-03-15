@@ -4,13 +4,14 @@ import sys
 import typer
 from rich import print
 
+from .run import LinuxRunner, WindowsRunner
+
 from .config import Config
 from .service import LinuxServiceManager, WindowsServiceManager
 
 app = typer.Typer(help="sing-box service manager.")
 service = typer.Typer(help="Service management commands")
 config = typer.Typer(help="Configuration management commands")
-
 
 app.add_typer(service, name="service")
 app.add_typer(config, name="config")
@@ -23,6 +24,11 @@ class SingBoxCLI:
             WindowsServiceManager(self.config)
             if self.config.is_windows
             else LinuxServiceManager(self.config)
+        )
+        self.runner = (
+            WindowsRunner(self.config)
+            if self.config.is_windows
+            else LinuxRunner(self.config)
         )
         if not self.config.init_directories():
             typer.Exit(1)
@@ -39,6 +45,18 @@ class SingBoxCLI:
             if not ctypes.windll.shell32.IsUserAnAdmin():  # type: ignore
                 print("⚠️ This script must be run as Administrator.")
                 sys.exit(1)
+
+
+@app.command()
+def run() -> None:
+    """Run sing-box service"""
+    cli = SingBoxCLI()
+    cli.ensure_root()
+    if cli.config.update_config():
+        cli.runner.run()
+    else:
+        print("❌ Failed to update configuration.")
+        typer.Exit(1)
 
 
 @service.command("enable")
