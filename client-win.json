@@ -93,12 +93,12 @@
       "type": "selector",
       "tag": "proxy",
       "outbounds": [
-        "⚡San Francisco Hy2",
-        "🌩️San Francisco WS",
-        "🌟San Francisco WS",
+        "⚡ Hysteria2-direct",
+        "⚙️ Vless-cf-worker",
+        "🌩️ Vless-cf-proxy",
         "direct"
       ],
-      "default": "⚡San Francisco Hy2"
+      "default": "⚡ Hysteria2-direct"
     },
     {
       "type": "direct",
@@ -106,7 +106,7 @@
     },
     {
       "type": "vless",
-      "tag": "🌟San Francisco WS",
+      "tag": "🌩️ Vless-cf-proxy",
       "tcp_fast_open": true,
       "tcp_multi_path": true,
       "udp_fragment": true,
@@ -130,7 +130,7 @@
     },
     {
       "type": "vless",
-      "tag": "🌩️San Francisco WS",
+      "tag": "⚙️ Vless-cf-worker",
       "server": "104.24.13.124",
       "server_port": 443,
       "uuid": "717f9e5c-9922-49a0-aa12-3fa17d63a7a8",
@@ -148,7 +148,7 @@
     },
     {
       "type": "hysteria2",
-      "tag": "⚡San Francisco Hy2",
+      "tag": "⚡ Hysteria2-direct",
       "tcp_fast_open": true,
       "tcp_multi_path": true,
       "udp_fragment": true,
