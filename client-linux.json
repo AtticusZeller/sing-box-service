@@ -70,7 +70,8 @@
     "interval": "30m0s",
     "server": "time.cloudflare.com",
     "write_to_system": true,
-    "server_port": 123
+    "server_port": 123,
+    "detour": "direct"
   },
   "inbounds": [
     {
