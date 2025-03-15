@@ -5,7 +5,7 @@ from .config import Config
 
 
 class ServiceManager:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config) -> None:
         self.config = config
 
     def create_service(self) -> None:
@@ -37,7 +37,7 @@ class ServiceManager:
 
 
 class WindowsServiceManager(ServiceManager):
-    def __init__(self, config: Config):
+    def __init__(self, config: Config) -> None:
         super().__init__(config)
         self.task_name = "sing-box-service"
         self.log_file = self.config.install_dir / "sing-box.log"
@@ -159,7 +159,7 @@ if ($task) {{
 
 
 class LinuxServiceManager(ServiceManager):
-    def __init__(self, config: Config):
+    def __init__(self, config: Config) -> None:
         super().__init__(config)
         self.service_name = "sing-box"
         self.service_file = Path("/etc/systemd/system/sing-box.service")
