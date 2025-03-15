@@ -3,7 +3,7 @@ import platform
 import shutil
 from pathlib import Path
 
-import requests
+import httpx
 from rich import print
 
 
@@ -77,7 +77,7 @@ class Config:
         )
         print(f"⌛ Updating configuration from {self.sub_url}")
         try:
-            response = requests.get(self.sub_url)
+            response = httpx.get(self.sub_url)
             response.raise_for_status()
             new_config = response.text
             self.config_file.write_text(new_config, encoding="utf-8")

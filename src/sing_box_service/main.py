@@ -4,9 +4,8 @@ import sys
 import typer
 from rich import print
 
-from .run import LinuxRunner, WindowsRunner
-
 from .config import Config
+from .run import LinuxRunner, WindowsRunner
 from .service import LinuxServiceManager, WindowsServiceManager
 
 app = typer.Typer(help="sing-box service manager.")

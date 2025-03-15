@@ -24,8 +24,8 @@ maintainers = [{ name = "A.J.Zeller", email = "zhouge1831@gmail.com" }]
 
 dynamic = ["version"] # https://hatch.pypa.io/latest/config/metadata/#version
 dependencies = [
+    "httpx>=0.28.1",
     "psutil>=6.1.1",
-    "requests>=2.32.3",
     "typer>=0.15.1",
 ]
 
@@ -57,7 +57,6 @@ dev = [
     "bump-my-version>=0.28.0",
     "typos>=1.26.8",
     "types-psutil>=6.1.0.20241221",
-    "types-requests>=2.32.0.20241016",
     "pytest>=8.3.5",
 ]
 
