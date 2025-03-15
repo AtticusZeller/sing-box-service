@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.19 - 2025-03-15
+
+### 🚀 Features
+
+- Add simple run command
+
+### ⚙️ Miscellaneous Tasks
+
+- Add type annotationfor __init__
+
 ## 0.0.18 - 2025-03-15
 
 ### ⚙️ Miscellaneous Tasks
