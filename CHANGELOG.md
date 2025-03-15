@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.18 - 2025-03-15
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump deps
+
 ## 0.0.17 - 2025-03-10
 
 ### 🐛 Bug Fixes
