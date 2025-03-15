@@ -20,7 +20,7 @@
         "tag": "dns_proxy",
         "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
         "address_resolver": "dns_resolver",
-        "client_subnet": "137.184.125.132",
+        "client_subnet": "137.184.112.0/20",
         "detour": "proxy"
       },
       {
