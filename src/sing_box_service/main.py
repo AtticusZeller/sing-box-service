@@ -136,6 +136,9 @@ def config_add_sub(url: str) -> None:
             cli.service.restart()
         else:
             typer.Exit(1)
+    else:
+        print("❌ Failed to add subscription.")
+        typer.Exit(1)
 
 
 @config.command("show-sub")

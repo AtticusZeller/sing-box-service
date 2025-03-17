@@ -95,8 +95,7 @@ class Config:
             return False
 
     def add_subscription(self, url: str) -> bool:
-        if not url.startswith(("http://", "https://")):
-            print("❌ Invalid URL format.")
+        if not check_url(url):
             return False
         self.subscription_file.write_text(url.strip())
         print("📁 Subscription added successfully.")
@@ -154,3 +153,13 @@ def show_diff_config(current_config: str, new_config: str) -> None:
             print(f"[dim]{line}[/dim]")
         else:
             print(f"[white]{line}[/white]")
+
+
+def check_url(url: str) -> bool:
+    try:
+        response = httpx.head(url)
+        response.raise_for_status()
+        return True
+    except Exception as e:
+        print(f"❌ Invalid URL: {e}")
+        return False
