@@ -1,7 +1,9 @@
+import json
 import os
 import platform
 import shutil
 from pathlib import Path
+from typing import Any
 
 import httpx
 from rich import print
@@ -63,6 +65,28 @@ class Config:
         if not self.subscription_file.exists():
             return ""
         return self.subscription_file.read_text().strip()
+
+    @property
+    def api_base_url(self) -> str:
+        config = load_json_config(self.config_file)
+        url = (
+            config.get("experimental", {})
+            .get("clash_api", {})
+            .get("external_controller", "")
+        )
+        if isinstance(url, str) and url:
+            if not url.startswith("http"):
+                url = f"http://{url}"
+            return url
+        return ""
+
+    @property
+    def api_secret(self) -> str:
+        config = load_json_config(self.config_file)
+        token = config.get("experimental", {}).get("clash_api", {}).get("secret", "")
+        if isinstance(token, str) and token:
+            return token
+        return ""
 
     def update_config(self) -> bool:
         """download configuration from subscription URL and show differences"""
@@ -163,3 +187,11 @@ def check_url(url: str) -> bool:
     except Exception as e:
         print(f"❌ Invalid URL: {e}")
         return False
+
+
+def load_json_config(config_file: Path) -> dict[str, Any]:
+    try:
+        return dict(json.loads(config_file.read_text(encoding="utf-8")))
+    except Exception as e:
+        print(f"❌ Failed to load configuration: {e}")
+        return {}

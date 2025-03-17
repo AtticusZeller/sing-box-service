@@ -1,10 +1,13 @@
+import asyncio
 import os
 import sys
 
 import typer
 from rich import print
 
+from .client import SingBoxAPIClient
 from .config import Config
+from .monitor import ResourceMonitor, ResourceVisualizer
 from .run import LinuxRunner, WindowsRunner
 from .service import LinuxServiceManager, WindowsServiceManager
 
@@ -19,6 +22,8 @@ app.add_typer(config, name="config")
 class SingBoxCLI:
     def __init__(self) -> None:
         self.config = Config()
+        if not self.config.init_directories():
+            typer.Exit(1)
         self.service = (
             WindowsServiceManager(self.config)
             if self.config.is_windows
@@ -29,8 +34,16 @@ class SingBoxCLI:
             if self.config.is_windows
             else LinuxRunner(self.config)
         )
-        if not self.config.init_directories():
-            typer.Exit(1)
+
+    def create_client(
+        self, base_url: str | None = None, token: str | None = None
+    ) -> SingBoxAPIClient:
+        # read from config if not provided
+        if base_url is None:
+            base_url = self.config.api_base_url
+        if token is None:
+            token = self.config.api_secret
+        return SingBoxAPIClient(base_url, token)
 
     def ensure_root(self) -> None:
         """https://gist.github.com/RDCH106/fdd419ef7dd803932b16056aab1d2300"""
@@ -56,6 +69,29 @@ def run() -> None:
     else:
         print("❌ Failed to update configuration.")
         typer.Exit(1)
+
+
+@app.command()
+def stats(
+    base_url: str | None = typer.Option(
+        None,
+        "--base-url",
+        "-b",
+        help="Base URL of the sing-box API, read from configuration file if not provided",
+    ),
+    token: str | None = typer.Option(
+        None,
+        "--token",
+        "-t",
+        help="Authentication token for the sing-box API, read from configuration file if not provided",
+    ),
+) -> None:
+    """Show sing-box traffic, memory statistics and connections, requires API token"""
+    cli = SingBoxCLI()
+    api_client = cli.create_client(base_url, token)
+    visualizer = ResourceVisualizer()
+    monitor = ResourceMonitor(api_client, visualizer)
+    asyncio.run(monitor.start())
 
 
 @service.command("enable")
