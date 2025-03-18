@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.22 - 2025-03-18
+
+### 🐛 Bug Fixes
+
+- Commands annotation
+
 ## 0.0.21 - 2025-03-18
 
 ### 🐛 Bug Fixes
