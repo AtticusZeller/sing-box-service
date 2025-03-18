@@ -180,7 +180,7 @@ class SingBoxAPIClient:
     async def test_group_delay(
         self,
         group_name: str,
-        url: str = "http://www.gstatic.com/generate_204",
+        url: str = "https://cp.cloudflare.com/generate_204",
         timeout: int = 5000,
     ) -> dict[str, Any]:
         """
@@ -199,14 +199,27 @@ class SingBoxAPIClient:
             "GET", f"/group/{group_name}/delay", params=params
         )
 
-    async def get_proxies(self) -> dict[str, Any]:
+    async def test_proxy_delay(
+        self,
+        proxy_name: str,
+        url: str = "https://cp.cloudflare.com/generate_204",
+        timeout: int = 5000,
+    ) -> dict[str, Any]:
         """
-        Get all proxies.
+        Test delay for a specific proxy.
+
+        Args:
+            proxy_name: Name of the proxy
+            url: URL to test latency against
+            timeout: Timeout in milliseconds
 
         Returns:
-            Dictionary containing proxies information
+            Dictionary containing delay test results
         """
-        return await self._make_request("GET", "/proxies")
+        params = {"url": url, "timeout": timeout}
+        return await self._make_request(
+            "GET", f"/proxies/{proxy_name}/delay", params=params
+        )
 
     async def select_proxy(self, proxy_name: str, selected: str) -> dict[str, Any]:
         """
