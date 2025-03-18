@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.20 - 2025-03-18
+
+### 🚀 Features
+
+- Add stats command to visualize traffic, memory and connections
+- Add cnns command to manage connections
+- Add proxy command to select policy
+
+### 🚜 Refactor
+
+- Replace requests with httpx
+- Check url using httpx
+
 ## 0.0.19 - 2025-03-15
 
 ### 🚀 Features
