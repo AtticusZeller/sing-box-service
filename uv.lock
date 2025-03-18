@@ -585,6 +585,7 @@ name = "sing-box-cli"
 source = { editable = "." }
 dependencies = [
     { name = "httpx", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "prompt-toolkit", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "psutil", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "typer", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
@@ -604,6 +605,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "prompt-toolkit", specifier = ">=3.0.50" },
     { name = "psutil", specifier = ">=6.1.1" },
     { name = "typer", specifier = ">=0.15.1" },
 ]

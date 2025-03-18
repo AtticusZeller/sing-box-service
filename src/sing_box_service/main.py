@@ -7,6 +7,7 @@ from rich import print
 
 from .client import SingBoxAPIClient
 from .config import Config
+from .connections import ConnectionsManager
 from .monitor import ResourceMonitor, ResourceVisualizer
 from .run import LinuxRunner, WindowsRunner
 from .service import LinuxServiceManager, WindowsServiceManager
@@ -92,6 +93,28 @@ def stats(
     visualizer = ResourceVisualizer()
     monitor = ResourceMonitor(api_client, visualizer)
     asyncio.run(monitor.start())
+
+
+@app.command()
+def conns(
+    base_url: str | None = typer.Option(
+        None,
+        "--base-url",
+        "-b",
+        help="Base URL of the sing-box API, read from configuration file if not provided",
+    ),
+    token: str | None = typer.Option(
+        None,
+        "--token",
+        "-t",
+        help="Authentication token for the sing-box API, read from configuration file if not provided",
+    ),
+) -> None:
+    """Show sing-box connections, requires API token"""
+    cli = SingBoxCLI()
+    api_client = cli.create_client(base_url, token)
+    manager = ConnectionsManager(api_client)
+    asyncio.run(manager.run())
 
 
 @service.command("enable")
