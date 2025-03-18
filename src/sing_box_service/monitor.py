@@ -336,7 +336,7 @@ class ResourceVisualizer:
         for conn in sorted_connections[:max_display]:
             # Extract data
             metadata = conn.get("metadata", {})
-            host = metadata.get("host", "Unknown")
+            host = metadata.get("host", "") or metadata.get("destinationIP", "?")
 
             network = metadata.get("network", "?").upper()
             upload = format_bytes(conn.get("upload", 0))
