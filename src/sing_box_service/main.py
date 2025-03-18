@@ -88,7 +88,7 @@ def stats(
         help="Authentication token for the sing-box API, read from configuration file if not provided",
     ),
 ) -> None:
-    """Show sing-box traffic, memory statistics and connections, requires API token"""
+    """Show sing-box traffic, memory statistics and connections, requires API token(Optional)"""
     cli = SingBoxCLI()
     api_client = cli.create_client(base_url, token)
     visualizer = ResourceVisualizer()
@@ -111,7 +111,7 @@ def conns(
         help="Authentication token for the sing-box API, read from configuration file if not provided",
     ),
 ) -> None:
-    """Show sing-box connections, requires API token"""
+    """Manage sing-box connections, requires API token(Optional)"""
     cli = SingBoxCLI()
     api_client = cli.create_client(base_url, token)
     manager = ConnectionsManager(api_client)
@@ -133,7 +133,7 @@ def proxy(
         help="Authentication token for the sing-box API, read from configuration file if not provided",
     ),
 ) -> None:
-    """Show sing-box connections, requires API token"""
+    """Manage sing-box policy groups, requires API token(Optional)"""
     cli = SingBoxCLI()
     api_client = cli.create_client(base_url, token)
     manager = PolicyGroupManager(api_client)
