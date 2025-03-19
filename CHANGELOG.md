@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.23 - 2025-03-19
+
+### 🚀 Features
+
+- Replace connection table with traffic graph in stats command
+
+### 📚 Documentation
+
+- Update README.md command --help
+
 ## 0.0.22 - 2025-03-18
 
 ### 🐛 Bug Fixes
