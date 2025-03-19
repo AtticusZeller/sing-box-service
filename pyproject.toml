@@ -25,8 +25,11 @@ maintainers = [{ name = "A.J.Zeller", email = "zhouge1831@gmail.com" }]
 dynamic = ["version"] # https://hatch.pypa.io/latest/config/metadata/#version
 dependencies = [
     "httpx>=0.28.1",
+    "numpy>=2.2.4",
+    "plotext>=5.3.2",
     "prompt-toolkit>=3.0.50",
     "psutil>=6.1.1",
+    "scipy>=1.15.2",
     "typer>=0.15.1",
 ]
 
@@ -59,6 +62,7 @@ dev = [
     "typos>=1.26.8",
     "types-psutil>=6.1.0.20241221",
     "pytest>=8.3.5",
+    "scipy-stubs>=1.15.2.1",
 ]
 
 [tool.hatch.version]

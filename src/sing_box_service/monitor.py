@@ -1,19 +1,23 @@
 import asyncio
+import math
 import statistics
 from collections import deque
 from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from rich import box
-from rich.console import Console, Group
+import numpy as np
+import plotext as plt  # type: ignore
+from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from scipy.interpolate import PchipInterpolator, make_interp_spline
 
-from sing_box_service.client import SingBoxAPIClient
+from .client import SingBoxAPIClient
+from .widget import RichPlotMixin, create_header_panel
 
 
 class RefreshRate(Enum):
@@ -193,6 +197,175 @@ def format_chain(chains: list[str]) -> str:
         raise ValueError(f"Invalid chains data: {chains}")
 
 
+def interpolate_data(
+    data: list[float], method: str = "linear", factor: int = 5
+) -> tuple[list[float], list[float]]:
+    """
+    Interpolate data points to create a smoother curve.
+
+    Args:
+        data: List of data points to interpolate
+        method: Interpolation method ('spline', 'pchip', or 'linear')
+
+    Returns:
+        Tuple of (x_new, y_new) containing interpolated data points
+    """
+    if len(data) < 3:
+        # Not enough points for interpolation, return original data
+        return list(range(len(data))), data
+
+    x = np.array(range(len(data)))
+    y = np.array(data)
+
+    # Create new x values for interpolated points
+    points = len(data) * factor
+    x_new = np.linspace(x.min(), x.max(), points)
+
+    if method == "spline":
+        # Cubic spline interpolation
+        spl = make_interp_spline(x, y, k=3)  # k=3 for cubic spline
+        y_new = spl(x_new)
+    elif method == "pchip":
+        # PCHIP interpolation (Piecewise Cubic Hermite Interpolating Polynomial)
+        # This preserves monotonicity and doesn't overshoot
+        pchip = PchipInterpolator(x, y)
+        y_new = pchip(x_new)
+    else:  # 'linear' or any other value
+        # Simple linear interpolation
+        y_new = np.interp(x_new, x, y)
+
+    return list(x_new), list(y_new)
+
+
+class TrafficGraph(RichPlotMixin):
+    """A Rich-compatible network traffic graph using plotext."""
+
+    def __init__(self, max_points: int = 60) -> None:
+        """
+        Initialize the traffic graph.
+
+        Args:
+            max_points: Maximum number of data points to keep
+        """
+        super().__init__()
+
+        self.max_points = max_points
+        # Initialize data structures for storing history
+        # At least 2 points needed for a line o avoid rendering issues
+        self.upload_speeds: deque[float] = deque([0.0, 0.0], maxlen=max_points)
+        self.download_speeds: deque[float] = deque([0.0, 0.0], maxlen=max_points)
+
+        # Number of points to generate during inte= 5
+        self.interp_factor = 5
+
+    def update_from_traffic_data(self, traffic_data: dict[str, Any]) -> None:
+        """
+        Update the graph with new traffic data.
+
+        Args:
+            traffic_data: Dictionary with 'up' and 'down' traffic totals
+        """
+
+        # Update the graph with new data
+        self.upload_speeds.append(traffic_data.get("up", 0))
+        self.download_speeds.append(traffic_data.get("down", 0))
+
+    def make_plot(self, width: int, height: int, interp_method: str = "pchip") -> str:
+        """
+        Create the plot with interpolated data.
+
+        Args:
+            width: Width of the plot
+            height: Height of the plot
+            interp_method: Interpolation method ('spline', 'pchip', or 'linear')
+
+        Returns:
+            String representation of the plot
+        """
+        # Clear the previous plot
+        plt.clf()
+
+        # Set up the plot styling
+        plt.theme("dark")
+        plt.axes_color((10, 14, 27))
+        plt.ticks_color((133, 159, 213))
+        plt.plotsize(width, height)
+
+        # Set titles and legend
+        plt.xlabel("Time")
+        plt.ylabel("Speed")
+
+        # Get the data for plotting
+        y_upload = list(self.upload_speeds)
+        y_download = list(self.download_speeds)
+
+        if len(y_upload) >= 2 and len(y_download) >= 2:
+            # Interpolate data
+            x_upload, y_upload_smooth = interpolate_data(
+                y_upload, interp_method, self.interp_factor
+            )
+            x_download, y_download_smooth = interpolate_data(
+                y_download, interp_method, self.interp_factor
+            )
+
+            # Plot upload and download data with interpolated values
+            plt.plot(
+                x_upload,
+                y_upload_smooth,
+                marker=".",
+                label="Upload",
+                color=(255, 73, 112),  # Red
+            )
+            plt.plot(
+                x_download,
+                y_download_smooth,
+                marker=".",
+                label="Download",
+                color=(68, 180, 255),  # Blue
+            )
+
+            # Calculate and set y-axis ticks with a better algorithm
+            all_y_values = y_upload_smooth + y_download_smooth
+            max_y_value = max(all_y_values) if all_y_values else 1.0
+
+            # Ensure we have a reasonable minimum value
+            max_y_value = max(max_y_value, 1.0)
+
+            # Round up to a nice number for the maximum tick
+            # Find the magnitude of the value (1, 10, 100, 1000, etc.)
+            magnitude = 10 ** math.floor(math.log10(max_y_value))
+
+            # Scale to a number between 1-10
+            scaled = max_y_value / magnitude
+
+            # Round up to a nice number (1, 2, 5, 10)
+            if scaled <= 1:
+                nice_max = 1
+            elif scaled <= 2:
+                nice_max = 2
+            elif scaled <= 5:
+                nice_max = 5
+            else:
+                nice_max = 10
+
+            # Final nice maximum value
+            nice_max_value = nice_max * magnitude
+
+            # Create ticks with appropriate intervals
+            num_ticks = 8  # Will give 7 intervals
+            y_ticks = [i * (nice_max_value / (num_ticks - 1)) for i in range(num_ticks)]
+
+            # Create labels
+            y_labels = [format_speed(val) for val in y_ticks]
+
+            # Apply ticks to the plot
+            plt.yticks(y_ticks, y_labels)
+
+            return str(plt.build())
+        else:
+            return "Collecting data..."
+
+
 class ResourceVisualizer:
     """Class for visualizing Sing-Box resource statistics."""
 
@@ -204,6 +377,11 @@ class ResourceVisualizer:
         # For averages calculation
         self.traffic_data_history: deque[dict[str, int]] = deque(maxlen=10)
         self.memory_data_history: deque[dict[str, int]] = deque(maxlen=10)
+
+        # For traffic graph
+        self.traffic_graph = TrafficGraph(
+            max_points=120  # Store 2 minutes of data
+        )
 
     def create_traffic_table(self, traffic_data: dict[str, Any]) -> Table:
         """Create a table displaying traffic statistics with averages."""
@@ -295,98 +473,10 @@ class ResourceVisualizer:
 
         return table
 
-    @staticmethod
-    def create_connections_table(connections_data: dict[str, Any]) -> Panel:
-        """
-        Create a panel displaying active connections.
-
-        Args:
-            connections_data: Connections data from the API
-
-        Returns:
-            Rich Panel containing the connections information
-        """
-        if not connections_data or "connections" not in connections_data:
-            return Panel("No connections data available", title="Active Connections")
-
-        connections = connections_data.get("connections", [])
-
-        if not connections:
-            return Panel("No active connections", title="Active Connections")
-
-        # Create table to display connections
-        table = Table(
-            title=f"Active Connections ({len(connections)})",
-            expand=True,
-            pad_edge=False,  # Reduce padding
-        )
-        table.add_column("Host", style="cyan", no_wrap=True, max_width=20)
-        table.add_column("Rule", style="bright_green", no_wrap=True, max_width=15)
-        table.add_column("Chain", style="yellow", no_wrap=True, max_width=20)
-        table.add_column("Network", justify="center", style="green")
-        table.add_column("↑", justify="right", style="bright_blue")
-        table.add_column("↓", justify="right", style="magenta")
-        table.add_column("Duration", justify="right", style="green")
-
-        # Sort connections by time
-        sorted_connections = sort_connections(connections)
-
-        # Show top connections (limit to avoid overwhelming the display)
-        max_display = 15
-        for conn in sorted_connections[:max_display]:
-            # Extract data
-            metadata = conn.get("metadata", {})
-            host = metadata.get("host", "") or metadata.get("destinationIP", "?")
-
-            network = metadata.get("network", "?").upper()
-            upload = format_bytes(conn.get("upload", 0))
-            download = format_bytes(conn.get("download", 0))
-
-            # Extract rule information
-            # Format rule display - extract useful parts
-            rule_display = format_rule(conn.get("rule", ""))
-
-            # Calculate duration
-            duration_str = format_duration(conn.get("start", ""))
-
-            # Format chains (usually shows proxy names)
-            chain_str = format_chain(conn.get("chains", []))
-
-            table.add_row(
-                host, rule_display, chain_str, network, upload, download, duration_str
-            )
-
-        # Add summary information
-        total_upload = format_bytes(connections_data.get("uploadTotal", 0))
-        total_download = format_bytes(connections_data.get("downloadTotal", 0))
-        memory_usage = format_bytes(connections_data.get("memory", 0))
-
-        summary = f"Total Upload: {total_upload} | Total Download: {total_download} | Memory: {memory_usage}"
-        if len(connections) > max_display:
-            summary += f" | Showing {max_display} of {len(connections)} connections"
-
-        # Return as a panel
-        return Panel(
-            Group(table, Text(summary, justify="center")), title="Connection Details"
-        )
-
     def create_resources_layout(
-        self,
-        traffic_data: dict[str, Any],
-        memory_data: dict[str, Any],
-        connections_data: dict[str, Any],
+        self, traffic_data: dict[str, Any], memory_data: dict[str, Any]
     ) -> Layout:
-        """
-        Create the main layout with all resource components.
-
-        Args:
-            traffic_data: Traffic statistics data
-            memory_data: Memory usage data
-            connections_data: Connections data
-
-        Returns:
-            Rich Layout object
-        """
+        """Create the main layout with all resource components."""
         layout = Layout()
 
         # Create main sections
@@ -396,28 +486,34 @@ class ResourceVisualizer:
             Layout(name="footer", size=1),
         )
 
-        # Split main section into upper and connections
+        # Split main section for tables and graph
         layout["main"].split(
-            Layout(name="upper", ratio=1), Layout(name="connections", ratio=3)
+            Layout(name="stats", ratio=1), Layout(name="graph", ratio=3)
         )
 
-        # Split upper section into left and right
-        layout["upper"].split_row(Layout(name="left"), Layout(name="right"))
+        # Split stats section into left and right
+        layout["stats"].split_row(
+            Layout(name="traffic_stats"), Layout(name="memory_stats")
+        )
 
         # Add components
-        layout["header"].update(
+        layout["header"].update(create_header_panel("Sing-Box Resource Monitor"))
+
+        # Add tables
+        layout["stats"]["traffic_stats"].update(self.create_traffic_table(traffic_data))
+        layout["stats"]["memory_stats"].update(self.create_memory_table(memory_data))
+
+        # Update the traffic graph with new data
+        self.traffic_graph.update_from_traffic_data(traffic_data)
+
+        # Add the traffic graph to the layout
+        layout["graph"].update(
             Panel(
-                Text("Sing-Box Resource Monitor", justify="center"),
-                style="bold white on bright_blue",
-                box=box.SIMPLE,
+                self.traffic_graph,
+                title="Network Traffic Over Time",
+                border_style="cyan",
             )
         )
-
-        layout["upper"]["left"].update(self.create_traffic_table(traffic_data))
-        layout["upper"]["right"].update(self.create_memory_table(memory_data))
-
-        # Add connections panel
-        layout["connections"].update(self.create_connections_table(connections_data))
 
         # Add footer
         layout["footer"].update(Text("Press Ctrl+C to exit", justify="center"))
@@ -482,11 +578,10 @@ class ResourceMonitor:
                     # Use the current data from the streams
                     traffic_data = self.current_traffic
                     memory_data = self.current_memory
-                    connections_data = await self.api_client.get_connections()
 
                     # Update display
                     layout = self.visualizer.create_resources_layout(
-                        traffic_data, memory_data, connections_data
+                        traffic_data, memory_data
                     )
                     live.update(layout)
 
