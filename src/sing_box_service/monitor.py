@@ -6,7 +6,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-import numpy as np
 import plotext as plt  # type: ignore
 from rich.console import Console
 from rich.layout import Layout
@@ -14,7 +13,6 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from scipy.interpolate import PchipInterpolator, make_interp_spline
 
 from .client import SingBoxAPIClient
 from .widget import RichPlotMixin, create_header_panel
@@ -197,44 +195,157 @@ def format_chain(chains: list[str]) -> str:
         raise ValueError(f"Invalid chains data: {chains}")
 
 
-def interpolate_data(
-    data: list[float], method: str = "linear", factor: int = 5
+def advanced_smooth_bezier(
+    data: list[float], tension: float = 1, points_per_segment: int = 50
 ) -> tuple[list[float], list[float]]:
     """
-    Interpolate data points to create a smoother curve.
+    Create a highly smooth curve from data using advanced Bezier techniques.
 
     Args:
-        data: List of data points to interpolate
-        method: Interpolation method ('spline', 'pchip', or 'linear')
+        data: Original data points
+        tension: Controls curve tension (0.0-1.0, higher = smoother curves)
+        points_per_segment: Number of points to generate between each original data point
 
     Returns:
-        Tuple of (x_new, y_new) containing interpolated data points
+        Tuple of (x_values, y_values) containing smoothed curve points
     """
     if len(data) < 3:
-        # Not enough points for interpolation, return original data
         return list(range(len(data))), data
 
-    x = np.array(range(len(data)))
-    y = np.array(data)
+    # Create original x values
+    x_orig = list(range(len(data)))
+    y_orig = data
 
-    # Create new x values for interpolated points
-    points = len(data) * factor
-    x_new = np.linspace(x.min(), x.max(), points)
+    # Pre-process data to avoid extreme jumps
+    # Apply light smoothing to input data first
+    smoothed_input = []
+    window_size = 3
 
-    if method == "spline":
-        # Cubic spline interpolation
-        spl = make_interp_spline(x, y, k=3)  # k=3 for cubic spline
-        y_new = spl(x_new)
-    elif method == "pchip":
-        # PCHIP interpolation (Piecewise Cubic Hermite Interpolating Polynomial)
-        # This preserves monotonicity and doesn't overshoot
-        pchip = PchipInterpolator(x, y)
-        y_new = pchip(x_new)
-    else:  # 'linear' or any other value
-        # Simple linear interpolation
-        y_new = np.interp(x_new, x, y)
+    for i in range(len(y_orig)):
+        # Use window averaging for initial smoothing
+        window_start = max(0, i - window_size // 2)
+        window_end = min(len(y_orig), i + window_size // 2 + 1)
+        window = y_orig[window_start:window_end]
+        # Weighted average with center point having more influence
+        weights = [
+            0.5 + 0.5 * (1 - abs(i - j) / (window_size / 2))
+            for j in range(window_start, window_end)
+        ]
+        smoothed_input.append(
+            sum(w * v for w, v in zip(weights, window, strict=True)) / sum(weights)
+        )
 
-    return list(x_new), list(y_new)
+    # Replace original data with pre-smoothed data
+    y_orig = smoothed_input
+
+    x_smooth = []
+    y_smooth = []
+
+    # Calculate control points for the entire curve first
+    control_points_x1 = []
+    control_points_y1 = []
+    control_points_x2 = []
+    control_points_y2 = []
+
+    for i in range(len(data)):
+        # For each point, calculate control points
+        if i == 0:  # First point
+            # Control points for first segment
+            ctrl_x1 = x_orig[i]
+            ctrl_y1 = y_orig[i]
+
+            # Direction to next point
+            dx = x_orig[i + 1] - x_orig[i]
+            dy = y_orig[i + 1] - y_orig[i]
+
+            ctrl_x2 = x_orig[i] + dx * tension / 2
+            ctrl_y2 = y_orig[i] + dy * tension / 2
+
+        elif i == len(data) - 1:  # Last point
+            # Control points for last segment
+            # Direction from previous point
+            dx = x_orig[i] - x_orig[i - 1]
+            dy = y_orig[i] - y_orig[i - 1]
+
+            ctrl_x1 = int(x_orig[i] - dx * tension / 2)
+            ctrl_y1 = int(y_orig[i] - dy * tension / 2)
+
+            ctrl_x2 = x_orig[i]
+            ctrl_y2 = y_orig[i]
+
+        else:  # Middle points
+            # Calculate slopes of adjacent segments
+            dx1 = x_orig[i] - x_orig[i - 1]
+            dy1 = y_orig[i] - y_orig[i - 1]
+            dx2 = x_orig[i + 1] - x_orig[i]
+            dy2 = y_orig[i + 1] - y_orig[i]
+
+            # Average slope, weighted by segment length
+            len1 = (dx1**2 + dy1**2) ** 0.5
+            len2 = (dx2**2 + dy2**2) ** 0.5
+            total_len = len1 + len2
+
+            # Normalized direction vectors
+            if len1 > 0:
+                nx1, ny1 = dx1 / len1, dy1 / len1
+            else:
+                nx1, ny1 = 0, 0
+
+            if len2 > 0:
+                nx2, ny2 = dx2 / len2, dy2 / len2
+            else:
+                nx2, ny2 = 0, 0
+
+            # Weighted average direction
+            avg_nx = (nx1 * len1 + nx2 * len2) / total_len if total_len > 0 else 0
+            avg_ny = (ny1 * len1 + ny2 * len2) / total_len if total_len > 0 else 0
+
+            # Scale to create control points
+            scale = min(len1, len2) * tension
+
+            # Set control points
+            ctrl_x1 = x_orig[i] - avg_nx * scale
+            ctrl_y1 = y_orig[i] - avg_ny * scale
+            ctrl_x2 = x_orig[i] + avg_nx * scale
+            ctrl_y2 = y_orig[i] + avg_ny * scale
+
+        control_points_x1.append(ctrl_x1)
+        control_points_y1.append(ctrl_y1)
+        control_points_x2.append(ctrl_x2)
+        control_points_y2.append(ctrl_y2)
+
+    # Generate the curve points using the control points
+    for i in range(len(data) - 1):
+        # Start and end points
+        x0, y0 = x_orig[i], y_orig[i]
+        x1, y1 = x_orig[i + 1], y_orig[i + 1]
+
+        # Control points for this segment
+        cx1, cy1 = control_points_x2[i], control_points_y2[i]
+        cx2, cy2 = control_points_x1[i + 1], control_points_y1[i + 1]
+
+        # Generate points along this Bezier segment
+        for t in range(points_per_segment + 1):
+            t_norm = t / points_per_segment
+
+            # Cubic Bezier formula
+            x_point = (
+                (1 - t_norm) ** 3 * x0
+                + 3 * (1 - t_norm) ** 2 * t_norm * cx1
+                + 3 * (1 - t_norm) * t_norm**2 * cx2
+                + t_norm**3 * x1
+            )
+            y_point = (
+                (1 - t_norm) ** 3 * y0
+                + 3 * (1 - t_norm) ** 2 * t_norm * cy1
+                + 3 * (1 - t_norm) * t_norm**2 * cy2
+                + t_norm**3 * y1
+            )
+
+            x_smooth.append(x_point)
+            y_smooth.append(y_point)
+
+    return x_smooth, y_smooth
 
 
 class TrafficGraph(RichPlotMixin):
@@ -270,14 +381,14 @@ class TrafficGraph(RichPlotMixin):
         self.upload_speeds.append(traffic_data.get("up", 0))
         self.download_speeds.append(traffic_data.get("down", 0))
 
-    def make_plot(self, width: int, height: int, interp_method: str = "pchip") -> str:
+    def make_plot(self, width: int, height: int, tension: float = 0.8) -> str:
         """
-        Create the plot with interpolated data.
+        Create the plot with highly smoothed curves.
 
         Args:
             width: Width of the plot
             height: Height of the plot
-            interp_method: Interpolation method ('spline', 'pchip', or 'linear')
+            tension: Controls curve smoothness (0.0-1.0)
 
         Returns:
             String representation of the plot
@@ -294,21 +405,22 @@ class TrafficGraph(RichPlotMixin):
         # Set titles and legend
         plt.xlabel("Time")
         plt.ylabel("Speed")
+        plt.grid(False)  # Disable grid for cleaner look
 
         # Get the data for plotting
         y_upload = list(self.upload_speeds)
         y_download = list(self.download_speeds)
 
-        if len(y_upload) >= 2 and len(y_download) >= 2:
-            # Interpolate data
-            x_upload, y_upload_smooth = interpolate_data(
-                y_upload, interp_method, self.interp_factor
+        if len(y_upload) >= 3 and len(y_download) >= 3:
+            # Apply advanced smoothing
+            x_upload, y_upload_smooth = advanced_smooth_bezier(
+                y_upload, tension=tension, points_per_segment=30
             )
-            x_download, y_download_smooth = interpolate_data(
-                y_download, interp_method, self.interp_factor
+            x_download, y_download_smooth = advanced_smooth_bezier(
+                y_download, tension=tension, points_per_segment=30
             )
 
-            # Plot upload and download data with interpolated values
+            # Fill areas below curves
             plt.plot(
                 x_upload,
                 y_upload_smooth,
@@ -321,24 +433,18 @@ class TrafficGraph(RichPlotMixin):
                 y_download_smooth,
                 marker=".",
                 label="Download",
-                color=(68, 180, 255),  # Blue
+                color=(68, 180, 255),  # Blue color like in the image
             )
 
-            # Calculate and set y-axis ticks with a better algorithm
+            # Calculate and set y-axis ticks
             all_y_values = y_upload_smooth + y_download_smooth
             max_y_value = max(all_y_values) if all_y_values else 1.0
-
-            # Ensure we have a reasonable minimum value
             max_y_value = max(max_y_value, 1.0)
 
-            # Round up to a nice number for the maximum tick
-            # Find the magnitude of the value (1, 10, 100, 1000, etc.)
+            # Find a nice maximum value
             magnitude = 10 ** math.floor(math.log10(max_y_value))
-
-            # Scale to a number between 1-10
             scaled = max_y_value / magnitude
 
-            # Round up to a nice number (1, 2, 5, 10)
             if scaled <= 1:
                 nice_max = 1
             elif scaled <= 2:
@@ -348,14 +454,11 @@ class TrafficGraph(RichPlotMixin):
             else:
                 nice_max = 10
 
-            # Final nice maximum value
             nice_max_value = nice_max * magnitude
 
             # Create ticks with appropriate intervals
-            num_ticks = 8  # Will give 7 intervals
+            num_ticks = 5  # Fewer ticks for cleaner look
             y_ticks = [i * (nice_max_value / (num_ticks - 1)) for i in range(num_ticks)]
-
-            # Create labels
             y_labels = [format_speed(val) for val in y_ticks]
 
             # Apply ticks to the plot
@@ -380,7 +483,7 @@ class ResourceVisualizer:
 
         # For traffic graph
         self.traffic_graph = TrafficGraph(
-            max_points=120  # Store 2 minutes of data
+            max_points=60  # Store 1 minutes of data
         )
 
     def create_traffic_table(self, traffic_data: dict[str, Any]) -> Table:
