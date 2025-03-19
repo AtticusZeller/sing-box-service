@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.24 - 2025-03-19
+
+### 🚜 Refactor
+
+- Smooth traffic data
+
 ## 0.0.23 - 2025-03-19
 
 ### 🚀 Features
