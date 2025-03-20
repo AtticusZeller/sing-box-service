@@ -1,5 +1,4 @@
 import asyncio
-from typing import Any
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
@@ -18,7 +17,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .client import SingBoxAPIClient
+from .client import ConnectionData, ConnectionInfo, SingBoxAPIClient
 from .monitor import (
     format_bytes,
     format_chain,
@@ -30,7 +29,7 @@ from .widget import create_header_panel, render_rich_to_prompt_toolkit
 
 
 def create_connections_table(
-    connections_data: dict[str, Any],
+    connections_data: ConnectionData,
     total: int,
     highlight_index: int = -1,
     max_display: int = 20,
@@ -47,10 +46,10 @@ def create_connections_table(
     Returns:
         Rich Panel containing the connections information
     """
-    if not connections_data or "connections" not in connections_data:
+    if len(connections_data.connections) == 0:
         return Panel("No connections data available", title="Active Connections")
 
-    connections = connections_data.get("connections", [])
+    connections = connections_data.connections
 
     if not connections:
         return Panel("No active connections", title="Active Connections")
@@ -75,21 +74,21 @@ def create_connections_table(
     # Show top connections (limit to avoid overwhelming the display)
     for idx, conn in enumerate(sorted_connections[:max_display]):
         # Extract data
-        metadata = conn.get("metadata", {})
-        host = metadata.get("host", "") or metadata.get("destinationIP", "?")
+        metadata = conn.metadata
+        host = metadata.host or metadata.destinationIP
 
-        network = metadata.get("network", "?").upper()
-        upload = format_bytes(conn.get("upload", 0))
-        download = format_bytes(conn.get("download", 0))
+        network = metadata.network.upper()
+        upload = format_bytes(conn.upload)
+        download = format_bytes(conn.download)
 
         # Extract rule information
-        rule_display = format_rule(conn.get("rule", ""))
+        rule_display = format_rule(conn.rule)
 
         # Calculate duration
-        duration_str = format_duration(conn.get("start", ""))
+        duration_str = format_duration(conn.start)
 
         # Format chains (usually shows proxy names)
-        chain_str = format_chain(conn.get("chains", []))
+        chain_str = format_chain(conn.chains)
 
         # Determine if this row should be highlighted
         if idx == highlight_index:
@@ -110,8 +109,8 @@ def create_connections_table(
             )
 
     # Add summary information
-    total_upload = format_bytes(connections_data.get("uploadTotal", 0))
-    total_download = format_bytes(connections_data.get("downloadTotal", 0))
+    total_upload = format_bytes(connections_data.uploadTotal)
+    total_download = format_bytes(connections_data.downloadTotal)
 
     summary = f"Total Upload: {total_upload} | Total Download: {total_download}"
     if len(connections) > max_display:
@@ -129,8 +128,8 @@ class ConnectionsManager:
     def __init__(self, api_client: SingBoxAPIClient) -> None:
         """Initialize the connections manager."""
         self.api_client = api_client
-        self.connections: list[dict[str, Any]] = []
-        self.filtered_connections: list[dict[str, Any]] = []
+        self.connections: list[ConnectionInfo] = []
+        self.filtered_connections: list[ConnectionInfo] = []
         self.page = 0
         self.page_size = 20
         self.selected_index = 0
@@ -160,11 +159,11 @@ class ConnectionsManager:
         return Style.from_dict({"status-bar": "bg:#333333 #ffffff"})
 
     @property
-    def selected_connection(self) -> dict[str, Any]:
+    def selected_connection(self) -> ConnectionInfo:
         """Get the currently selected connection."""
         return self.filtered_connections[
             self.page * self.page_size + self.selected_index
-        ].copy()
+        ].model_copy()
 
     def setup_keybindings(self) -> None:
         """Setup keyboard shortcuts."""
@@ -177,7 +176,7 @@ class ConnectionsManager:
         @self.kb.add("c-d")
         def _(event) -> None:  # type: ignore[no-untyped-def]  # noqa: ARG001
             """Close the connection."""
-            conn_id = self.selected_connection.get("id")
+            conn_id = self.selected_connection.id
             asyncio.create_task(self.close_connection(str(conn_id)))
 
         @self.kb.add("c-c")
@@ -248,19 +247,19 @@ class ConnectionsManager:
         self.filtered_connections = []
         for conn in self.connections:
             # Check host
-            host = conn.get("metadata", {}).get("host", "").lower()
+            host = conn.metadata.host.lower()
             if self.filter_text in host:
                 self.filtered_connections.append(conn)
                 continue
 
             # Check chains
-            chains = format_chain(conn.get("chains", [])).lower()
+            chains = format_chain(conn.chains).lower()
             if self.filter_text in chains:
                 self.filtered_connections.append(conn)
                 continue
 
             # Check network
-            network = conn.get("metadata", {}).get("network", "").lower()
+            network = conn.metadata.network.lower()
             if self.filter_text in network:
                 self.filtered_connections.append(conn)
                 continue
@@ -359,11 +358,11 @@ class ConnectionsManager:
         end_idx = min(start_idx + self.page_size, len(self.filtered_connections))
 
         # Create connections data for the current page
-        page_connections = {
-            "connections": self.filtered_connections[start_idx:end_idx],
-            "uploadTotal": self.total_upload,
-            "downloadTotal": self.total_download,
-        }
+        page_connections = ConnectionData(
+            connections=self.filtered_connections[start_idx:end_idx],
+            uploadTotal=self.total_upload,
+            downloadTotal=self.total_download,
+        )
 
         # Create rich panel with highlighted row
         panel = create_connections_table(
@@ -380,7 +379,7 @@ class ConnectionsManager:
         """Close a specific connection."""
         try:
             await self.api_client.close_connection(conn_id)
-            host = self.selected_connection.get("metadata", {}).get("host", "Unknown")
+            host = self.selected_connection.metadata.host
             cnnt_info = f"Connection {host=} {conn_id=}"
             self.status_message = f"{cnnt_info} closed successfully"
             # Refresh connections after closing one
@@ -405,9 +404,9 @@ class ConnectionsManager:
         try:
             data = await self.api_client.get_connections()
             # Sort connections by time and host
-            self.connections = sort_connections(data.get("connections", []))
-            self.total_upload = data.get("uploadTotal", 0)
-            self.total_download = data.get("downloadTotal", 0)
+            self.connections = sort_connections(data.connections)
+            self.total_upload = data.uploadTotal
+            self.total_download = data.downloadTotal
             self.filter_connections()  # Apply current filter
         except Exception as e:
             self.status_message = f"Error refreshing connections: {str(e)}"

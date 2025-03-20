@@ -1,5 +1,4 @@
 import asyncio
-from typing import Any
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import FormattedText
@@ -11,31 +10,27 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .client import SingBoxAPIClient
+from .client import GroupInfo, SingBoxAPIClient
 from .widget import create_header_panel, render_rich_to_prompt_toolkit
 
 
 def create_policy_group_table(
-    group_data: dict[str, Any],
+    group_data: GroupInfo | None,
     delay_cache: dict[str, int] | None = None,
     selected_index: int = -1,
 ) -> Panel:
     """Create a table to display policy group information."""
-    if not group_data or "all" not in group_data:
+    if group_data is None:
         return Panel("No policy group data available", title="Policy Group")
 
-    name = group_data.get("name", "Unknown")
-    type_info = group_data.get("type", "Unknown")
-    current = group_data.get("now", "")
-    proxies = group_data.get("all", [])
-
+    name = group_data.name
+    type_info = group_data.type
+    current = group_data.now
+    proxies = group_data.all
     # Get delay information, prioritizing the cache
-    history = group_data.get("history", [])
-    history_dict = (
-        {item.get("time", ""): item.get("delay", 0) for item in history}
-        if history
-        else {}
-    )
+    # TODO: no sure if this is the best way to handle this
+    history = group_data.history
+    history_dict = {item.time: item.delay for item in history} if history else {}
 
     # Create table for proxies
     table = Table(expand=True, show_header=True)
@@ -92,10 +87,10 @@ class PolicyGroupManager:
     def __init__(self, api_client: SingBoxAPIClient) -> None:
         """Initialize the policy group manager."""
         self.api_client = api_client
-        self.groups: list[dict[str, Any]] = []
+        self.groups: list[GroupInfo] = []
         self.selected_group_index = 0
         self.selected_proxy_index = 0
-        self.current_group: dict[str, Any] | None = None
+        self.current_group: GroupInfo | None = None
         self.status_message = "Loading policy groups..."
         self.running = False
 
@@ -142,8 +137,8 @@ class PolicyGroupManager:
                     self.selected_group_index += 1
                     asyncio.create_task(self.load_selected_group())
             else:
-                if self.current_group and "all" in self.current_group:
-                    proxies = self.current_group["all"]
+                if self.current_group:
+                    proxies = self.current_group.all
                     if self.selected_proxy_index < len(proxies) - 1:
                         self.selected_proxy_index += 1
 
@@ -163,8 +158,8 @@ class PolicyGroupManager:
             """Select a group or a proxy."""
             if not self.focus_on_groups and self.current_group:
                 # Select proxy
-                group_name = self.current_group.get("name", "")
-                proxies = self.current_group.get("all", [])
+                group_name = self.current_group.name
+                proxies = self.current_group.all
                 if proxies and self.selected_proxy_index < len(proxies):
                     selected_proxy = proxies[self.selected_proxy_index]
                     asyncio.create_task(self.select_proxy(group_name, selected_proxy))
@@ -173,7 +168,7 @@ class PolicyGroupManager:
         def _(event) -> None:  # type: ignore[no-untyped-def] # noqa: ARG001
             """Test delay for selected proxy."""
             if not self.focus_on_groups and self.current_group:
-                proxies = self.current_group.get("all", [])
+                proxies = self.current_group.all
                 if proxies and self.selected_proxy_index < len(proxies):
                     selected_proxy = proxies[self.selected_proxy_index]
                     asyncio.create_task(self.test_proxy_delay(selected_proxy))
@@ -182,7 +177,7 @@ class PolicyGroupManager:
         def _(event) -> None:  # type: ignore[no-untyped-def] # noqa: ARG001
             """Test delay for all proxies in the group."""
             if self.current_group:
-                group_name = self.current_group.get("name", "")
+                group_name = self.current_group.name
                 asyncio.create_task(self.test_group_delay(group_name))
 
     def create_layout(self) -> PTLayout:
@@ -251,7 +246,7 @@ class PolicyGroupManager:
         table.add_column("Policy Groups")
 
         for i, group in enumerate(self.groups):
-            name = group.get("name", "Unknown")
+            name = group.name
             if i == self.selected_group_index:
                 style = "bold white on blue"
                 text = Text(f"{name}", style=style)
@@ -268,7 +263,7 @@ class PolicyGroupManager:
         if not self.current_group:
             return Panel("No policy group selected", title="Proxies")
 
-        group_name = self.current_group.get("name", "")
+        group_name = self.current_group.name
         group_delay_cache = self.delay_cache.get(group_name, {})
 
         return create_policy_group_table(
@@ -283,7 +278,7 @@ class PolicyGroupManager:
         """Load all policy groups."""
         try:
             data = await self.api_client.get_groups()
-            self.groups = data.get("proxies", [])
+            self.groups = data.proxies
             if self.groups:
                 # Load the first group
                 await self.load_selected_group()
@@ -299,28 +294,27 @@ class PolicyGroupManager:
             return
 
         try:
-            group_name = self.groups[self.selected_group_index].get("name", "")
+            group_name = self.groups[self.selected_group_index].name
             self.status_message = f"Loading group: {group_name}..."
 
             data = await self.api_client.get_group(group_name)
 
             # Make sure we have the history data
-            if "history" not in data and "now" in data:
-                # Try to fetch delay data if not present
-                try:
-                    await self.api_client.test_group_delay(group_name)
-                    # Fetch the group data again to get updated delay information
-                    data = await self.api_client.get_group(group_name)
-                except Exception:
-                    # If testing fails, continue with existing data
-                    pass
+            # Try to fetch delay data if not present
+            try:
+                await self.api_client.test_group_delay(group_name)
+                # Fetch the group data again to get updated delay information
+                data = await self.api_client.get_group(group_name)
+            except Exception:
+                # If testing fails, continue with existing data
+                pass
 
             self.current_group = data
             self.selected_proxy_index = 0
 
             # Find the index of the currently selected proxy
-            current = data.get("now", "")
-            proxies = data.get("all", [])
+            current = data.now
+            proxies = data.all
             if current in proxies:
                 self.selected_proxy_index = proxies.index(current)
 
@@ -343,14 +337,14 @@ class PolicyGroupManager:
         if not self.current_group:
             return
 
-        group_name = self.current_group.get("name", "")
+        group_name = self.current_group.name
 
         try:
             self.status_message = f"Testing proxy delay: {proxy_name}..."
             result = await self.api_client.test_proxy_delay(proxy_name)
 
             # Extract delay information
-            delay = result.get("delay", 0)
+            delay = result.delay
 
             # Update our delay cache
             if group_name not in self.delay_cache:
@@ -367,7 +361,7 @@ class PolicyGroupManager:
         if not self.current_group:
             return
 
-        proxies = self.current_group.get("all", [])
+        proxies = self.current_group.all
         if not proxies:
             return
 
@@ -379,10 +373,11 @@ class PolicyGroupManager:
                 self.delay_cache[group_name] = {}
 
             # Test each proxy individually to ensure we get all results
+            # TODO: Consider batching these requests
             for proxy in proxies:
                 try:
                     result = await self.api_client.test_proxy_delay(proxy)
-                    delay = result.get("delay", 0)
+                    delay = result.delay
                     self.delay_cache[group_name][proxy] = delay
                 except Exception:
                     # If one proxy test fails, continue with others
@@ -398,7 +393,6 @@ class PolicyGroupManager:
 
         # Initial load of groups
         await self.load_groups()
-
         # Setup periodic refresh task
         refresh_task = asyncio.create_task(self.periodic_refresh())
 

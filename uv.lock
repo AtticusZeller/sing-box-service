@@ -623,6 +623,7 @@ dependencies = [
     { name = "plotext", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "prompt-toolkit", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "psutil", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "pydantic", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "typer", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
 
@@ -645,6 +646,7 @@ requires-dist = [
     { name = "plotext", specifier = ">=5.3.2" },
     { name = "prompt-toolkit", specifier = ">=3.0.50" },
     { name = "psutil", specifier = ">=6.1.1" },
+    { name = "pydantic", specifier = ">=2.10.6" },
     { name = "typer", specifier = ">=0.15.1" },
 ]
 

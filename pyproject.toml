@@ -28,6 +28,7 @@ dependencies = [
     "plotext>=5.3.2",
     "prompt-toolkit>=3.0.50",
     "psutil>=6.1.1",
+    "pydantic>=2.10.6",
     "typer>=0.15.1",
 ]
 

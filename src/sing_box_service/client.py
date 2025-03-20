@@ -5,9 +5,102 @@ Provides an async client for interacting with Sing-Box HTTP API.
 
 import json
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, TypeVar
 
 import httpx
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class FrozenBaseModel(BaseModel):
+    """Base model with frozen configuration."""
+
+    model_config = ConfigDict(frozen=True)
+
+
+# Define Pydantic models for API responses
+class TrafficData(FrozenBaseModel):
+    """http://base_url/traffic/"""
+
+    up: int = Field(default=0, description="Upload speed in B/s")
+    down: int = Field(default=0, description="Download speed in B/s")
+
+
+class MemoryData(FrozenBaseModel):
+    """http://base_url/memory/"""
+
+    inuse: int = Field(default=0, description="Memory in use in bytes")
+    total: int = Field(default=0, description="Total memory in bytes")
+
+
+class ConnectionMetadata(FrozenBaseModel):
+    destinationIP: str = ""
+    destinationPort: str
+    dnsMode: str
+    host: str = ""
+    network: str = Field(description="Network type")
+    processPath: str = ""
+    sourceIP: str
+    sourcePort: str
+    type: str = Field(description="Inbound type")
+
+
+class ConnectionInfo(FrozenBaseModel):
+    """https://base_url/connections/"""
+
+    id: str
+    download: int = Field(default=0, description="Download in bytes")
+    upload: int = Field(default=0, description="Upload in bytes")
+    rule: str = Field(description="Rule name => outbound")
+    start: str = Field(description="Start time")
+    chains: list[str] = Field(description="Proxy chains list")
+    metadata: ConnectionMetadata
+
+
+class ConnectionData(FrozenBaseModel):
+    uploadTotal: int = Field(default=0, description="Total upload in bytes")
+    downloadTotal: int = Field(default=0, description="Total download in bytes")
+    memory: int = Field(default=0, description="Memory usage in bytes")
+    connections: list[ConnectionInfo] = Field(description="List of active connections")
+
+
+class DelayHistory(FrozenBaseModel):
+    time: str = ""
+    delay: int = Field(default=0, description="Outbound delay in milliseconds")
+
+
+class GroupInfo(FrozenBaseModel):
+    """http://base_url/group/{group_name}/"""
+
+    type: str = Field(description="Proxy Group type")
+    name: str
+    udp: bool = Field(description="UDP support")
+    history: list[DelayHistory] = Field(
+        description="History of selected proxies", default=[]
+    )
+    now: str = Field(description="Currently selected proxy")
+    all: list[str] = Field(description="List of all outbound proxies")
+
+
+class GroupsData(FrozenBaseModel):
+    """http://base_url/group/"""
+
+    proxies: list[GroupInfo] = Field(description="List of proxies in the group")
+
+
+class DelayTestResult(FrozenBaseModel):
+    """Delay test result model."""
+
+    delay: int = Field(default=0, description="Outbound delay in milliseconds")
+
+
+class EmptyResponse(FrozenBaseModel):
+    """Empty response model."""
+
+    status_code: int
+
+
+# Generic response type for API methods
+T = TypeVar("T", bound=FrozenBaseModel)
 
 
 class SingBoxAPIClient:
@@ -45,7 +138,7 @@ class SingBoxAPIClient:
         except httpx.HTTPError:
             return False
 
-    async def _make_request(
+    async def _make_request_raw(
         self,
         method: str,
         endpoint: str,
@@ -82,12 +175,24 @@ class SingBoxAPIClient:
                 return dict(response.json())
             return {}
 
-    async def traffic_stream(self) -> AsyncGenerator[dict[str, Any], None]:
+    async def _make_request(
+        self,
+        method: str,
+        endpoint: str,
+        model_class: type[T],
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> T:
+        """Make a request and return data as a specific model."""
+        raw = await self._make_request_raw(method, endpoint, params, data)
+        return model_class.model_validate(raw)
+
+    async def traffic_stream(self) -> AsyncGenerator[TrafficData, None]:
         """
         Get traffic statistics as a stream of updates.
 
         Yields:
-            Dictionary containing traffic data (up/down in B/s)
+            TrafficData object containing traffic data (up/down in B/s)
         """
         url = f"{self.base_url}/traffic"
 
@@ -99,17 +204,18 @@ class SingBoxAPIClient:
                 async for line in response.aiter_lines():
                     if line.strip():  # Skip empty lines
                         try:
-                            yield json.loads(line)
+                            data = json.loads(line)
+                            yield TrafficData.model_validate(data)
                         except json.JSONDecodeError:
                             # Skip invalid JSON lines
                             continue
 
-    async def memory_stream(self) -> AsyncGenerator[dict[str, Any], None]:
+    async def memory_stream(self) -> AsyncGenerator[MemoryData, None]:
         """
         Get memory statistics as a stream of updates.
 
         Yields:
-            Dictionary containing memory data (inuse/total in bytes)
+            MemoryData object containing memory data (inuse/total in bytes)
         """
         url = f"{self.base_url}/memory"
 
@@ -121,19 +227,22 @@ class SingBoxAPIClient:
                 async for line in response.aiter_lines():
                     if line.strip():  # Skip empty lines
                         try:
-                            yield json.loads(line)
+                            data = json.loads(line)
+                            yield MemoryData.model_validate(data)
                         except json.JSONDecodeError:
                             # Skip invalid JSON lines
                             continue
 
-    async def get_connections(self) -> dict[str, Any]:
+    async def get_connections(self) -> ConnectionData:
         """
         Get current connections.
 
         Returns:
-            Dictionary containing active connections
+            ConnectionData object containing active connections
         """
-        return await self._make_request("GET", "/connections")
+        return await self._make_request(
+            "GET", "/connections", model_class=ConnectionData
+        )
 
     async def close_connection(self, connection_id: str) -> dict[str, Any]:
         """
@@ -145,7 +254,7 @@ class SingBoxAPIClient:
         Returns:
             Response from the API
         """
-        return await self._make_request("DELETE", f"/connections/{connection_id}")
+        return await self._make_request_raw("DELETE", f"/connections/{connection_id}")
 
     async def close_all_connections(self) -> dict[str, Any]:
         """
@@ -154,18 +263,18 @@ class SingBoxAPIClient:
         Returns:
             Response from the API
         """
-        return await self._make_request("DELETE", "/connections")
+        return await self._make_request_raw("DELETE", "/connections")
 
-    async def get_groups(self) -> dict[str, Any]:
+    async def get_groups(self) -> GroupsData:
         """
         Get all policy groups.
 
         Returns:
-            Dictionary containing policy groups information
+            GroupData object containing policy groups information
         """
-        return await self._make_request("GET", "/group")
+        return await self._make_request("GET", "/group", model_class=GroupsData)
 
-    async def get_group(self, group_name: str) -> dict[str, Any]:
+    async def get_group(self, group_name: str) -> GroupInfo:
         """
         Get information about a specific policy group.
 
@@ -173,9 +282,11 @@ class SingBoxAPIClient:
             group_name: Name of the policy group
 
         Returns:
-            Dictionary containing the policy group information
+            GroupData object containing the policy group information
         """
-        return await self._make_request("GET", f"/group/{group_name}")
+        return await self._make_request(
+            "GET", f"/group/{group_name}", model_class=GroupInfo
+        )
 
     async def test_group_delay(
         self,
@@ -188,14 +299,10 @@ class SingBoxAPIClient:
 
         Args:
             group_name: Name of the policy group
-            url: URL to test latency against
             timeout: Timeout in milliseconds
-
-        Returns:
-            Dictionary containing delay test results
         """
         params = {"url": url, "timeout": timeout}
-        return await self._make_request(
+        return await self._make_request_raw(
             "GET", f"/group/{group_name}/delay", params=params
         )
 
@@ -204,21 +311,19 @@ class SingBoxAPIClient:
         proxy_name: str,
         url: str = "https://cp.cloudflare.com/generate_204",
         timeout: int = 5000,
-    ) -> dict[str, Any]:
+    ) -> DelayTestResult:
         """
         Test delay for a specific proxy.
 
         Args:
-            proxy_name: Name of the proxy
-            url: URL to test latency against
             timeout: Timeout in milliseconds
-
-        Returns:
-            Dictionary containing delay test results
         """
         params = {"url": url, "timeout": timeout}
         return await self._make_request(
-            "GET", f"/proxies/{proxy_name}/delay", params=params
+            "GET",
+            f"/proxies/{proxy_name}/delay",
+            params=params,
+            model_class=DelayTestResult,
         )
 
     async def select_proxy(self, proxy_name: str, selected: str) -> dict[str, Any]:
@@ -228,12 +333,9 @@ class SingBoxAPIClient:
         Args:
             proxy_name: Name of the proxy selector
             selected: Name of the proxy to select
-
-        Returns:
-            Response from the API
         """
         data = {"name": selected}
-        return await self._make_request("PUT", f"/proxies/{proxy_name}", data=data)
+        return await self._make_request_raw("PUT", f"/proxies/{proxy_name}", data=data)
 
     async def get_version(self) -> dict[str, Any]:
         """
@@ -242,4 +344,4 @@ class SingBoxAPIClient:
         Returns:
             Dictionary containing version information
         """
-        return await self._make_request("GET", "/version")
+        return await self._make_request_raw("GET", "/version")

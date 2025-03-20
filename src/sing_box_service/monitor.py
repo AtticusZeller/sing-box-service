@@ -4,7 +4,6 @@ import statistics
 from collections import deque
 from datetime import datetime
 from enum import Enum
-from typing import Any
 
 import plotext as plt  # type: ignore
 from rich.console import Console
@@ -14,7 +13,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .client import SingBoxAPIClient
+from .client import ConnectionInfo, MemoryData, SingBoxAPIClient, TrafficData
 from .widget import RichPlotMixin, create_header_panel
 
 
@@ -69,7 +68,7 @@ def format_speed(bytes_per_sec_i: int | float) -> str:
 
 
 def calculate_averages(
-    data_history: deque[dict[str, int]], key: str
+    data_history: deque[TrafficData] | deque[MemoryData], key: str
 ) -> tuple[float, float]:
     """
     Calculate 5s and 10s averages for a specific metric.
@@ -88,7 +87,7 @@ def calculate_averages(
         list(data_history)[-5:] if history_len >= 5 else list(data_history)
     )
     five_sec_avg = (
-        statistics.mean(item.get(key, 0) for item in five_sec_samples)
+        statistics.mean(getattr(item, key) for item in five_sec_samples)
         if five_sec_samples
         else 0
     )
@@ -98,7 +97,7 @@ def calculate_averages(
         list(data_history)[-10:] if history_len >= 10 else list(data_history)
     )
     ten_sec_avg = (
-        statistics.mean(item.get(key, 0) for item in ten_sec_samples)
+        statistics.mean(getattr(item, key) for item in ten_sec_samples)
         if ten_sec_samples
         else 0
     )
@@ -106,7 +105,7 @@ def calculate_averages(
     return five_sec_avg, ten_sec_avg
 
 
-def sort_connections(connections: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def sort_connections(connections: list[ConnectionInfo]) -> list[ConnectionInfo]:
     """
     Sort connections by time in descending order.
 
@@ -120,9 +119,7 @@ def sort_connections(connections: list[dict[str, Any]]) -> list[dict[str, Any]]:
     Returns:
         list[dict[str, Any]]: The sorted list of connection dictionaries.
     """
-    return sorted(
-        connections, key=lambda x: (x.get("start", ""), x.get("host", "")), reverse=True
-    )
+    return sorted(connections, key=lambda x: (x.start, x.metadata.host), reverse=True)
 
 
 def format_rule(rule: str) -> str:
@@ -369,7 +366,7 @@ class TrafficGraph(RichPlotMixin):
         # Number of points to generate during inte= 5
         self.interp_factor = 5
 
-    def update_from_traffic_data(self, traffic_data: dict[str, Any]) -> None:
+    def update_from_traffic_data(self, traffic_data: TrafficData) -> None:
         """
         Update the graph with new traffic data.
 
@@ -378,8 +375,8 @@ class TrafficGraph(RichPlotMixin):
         """
 
         # Update the graph with new data
-        self.upload_speeds.append(traffic_data.get("up", 0))
-        self.download_speeds.append(traffic_data.get("down", 0))
+        self.upload_speeds.append(traffic_data.up)
+        self.download_speeds.append(traffic_data.down)
 
     def make_plot(self, width: int, height: int, tension: float = 0.8) -> str:
         """
@@ -478,22 +475,22 @@ class ResourceVisualizer:
         self.console = Console()
 
         # For averages calculation
-        self.traffic_data_history: deque[dict[str, int]] = deque(maxlen=10)
-        self.memory_data_history: deque[dict[str, int]] = deque(maxlen=10)
+        self.traffic_data_history: deque[TrafficData] = deque(maxlen=10)
+        self.memory_data_history: deque[MemoryData] = deque(maxlen=10)
 
         # For traffic graph
         self.traffic_graph = TrafficGraph(
             max_points=60  # Store 1 minutes of data
         )
 
-    def create_traffic_table(self, traffic_data: dict[str, Any]) -> Table:
+    def create_traffic_table(self, traffic_data: TrafficData) -> Table:
         """Create a table displaying traffic statistics with averages."""
         # Add current data to history
-        self.traffic_data_history.append(traffic_data.copy())
+        self.traffic_data_history.append(traffic_data.model_copy())
 
         # Get the raw values
-        up_bytes = traffic_data.get("up", 0)
-        down_bytes = traffic_data.get("down", 0)
+        up_bytes = traffic_data.up
+        down_bytes = traffic_data.down
 
         # Calculate averages
         up_5s_avg, up_10s_avg = calculate_averages(self.traffic_data_history, "up")
@@ -523,14 +520,14 @@ class ResourceVisualizer:
         )
         return table
 
-    def create_memory_table(self, memory_data: dict[str, Any]) -> Table:
+    def create_memory_table(self, memory_data: MemoryData) -> Table:
         """Create a table displaying memory usage statistics with averages."""
         # Add current data to history
-        self.memory_data_history.append(memory_data.copy())
+        self.memory_data_history.append(memory_data.model_copy())
 
         # Extract current memory values
-        inuse = memory_data.get("inuse", 0)
-        total = memory_data.get("total", 0)
+        inuse = memory_data.inuse
+        total = memory_data.total
 
         # Calculate averages
         inuse_5s_avg, inuse_10s_avg = calculate_averages(
@@ -577,7 +574,7 @@ class ResourceVisualizer:
         return table
 
     def create_resources_layout(
-        self, traffic_data: dict[str, Any], memory_data: dict[str, Any]
+        self, traffic_data: TrafficData, memory_data: MemoryData
     ) -> Layout:
         """Create the main layout with all resource components."""
         layout = Layout()
@@ -640,8 +637,8 @@ class ResourceMonitor:
         self.api_client = api_client
         self.visualizer = visualizer
         self.running = False
-        self.current_traffic = {"up": 0, "down": 0}  # in bytes
-        self.current_memory = {"inuse": 0, "total": 0}  # in bytes
+        self.current_traffic = TrafficData(up=0, down=0)  # in bytes
+        self.current_memory = MemoryData(inuse=0, total=0)  # in bytes
         # 1.0 fix interval for avoiding repeated data
         self.task_interval = RefreshRate.SLOW.value
 
