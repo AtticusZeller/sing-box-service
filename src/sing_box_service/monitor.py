@@ -642,6 +642,8 @@ class ResourceMonitor:
         self.running = False
         self.current_traffic = {"up": 0, "down": 0}  # in bytes
         self.current_memory = {"inuse": 0, "total": 0}  # in bytes
+        # 1.0 fix interval for avoiding repeated data
+        self.task_interval = RefreshRate.SLOW.value
 
     async def monitor_traffic(self) -> None:
         """Monitor traffic stream from the API."""
@@ -650,6 +652,7 @@ class ResourceMonitor:
                 self.current_traffic = traffic_data
                 if not self.running:
                     break
+                await asyncio.sleep(self.task_interval)
         except asyncio.CancelledError:
             pass
         except Exception as e:
@@ -662,6 +665,7 @@ class ResourceMonitor:
                 self.current_memory = memory_data
                 if not self.running:
                     break
+                await asyncio.sleep(self.task_interval)
         except asyncio.CancelledError:
             pass
         except Exception as e:
