@@ -1,11 +1,12 @@
 import subprocess
+from functools import lru_cache
 from pathlib import Path
 
-from .config import Config
+from ..config import SingBoxConfig
 
 
 class ServiceManager:
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: SingBoxConfig) -> None:
         self.config = config
 
     def create_service(self) -> None:
@@ -37,7 +38,7 @@ class ServiceManager:
 
 
 class WindowsServiceManager(ServiceManager):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: SingBoxConfig) -> None:
         super().__init__(config)
         self.task_name = "sing-box-service"
         self.log_file = self.config.install_dir / "sing-box.log"
@@ -159,7 +160,7 @@ if ($task) {{
 
 
 class LinuxServiceManager(ServiceManager):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: SingBoxConfig) -> None:
         super().__init__(config)
         self.service_name = "sing-box"
         self.service_file = Path("/etc/systemd/system/sing-box.service")
@@ -235,3 +236,14 @@ WantedBy=multi-user.target
     def version(self) -> str:
         result = subprocess.run([self.config.bin_path, "version"], capture_output=True)
         return result.stdout.decode("utf-8").strip()
+
+
+@lru_cache
+def create_service(
+    config: SingBoxConfig,
+) -> WindowsServiceManager | LinuxServiceManager:
+    return (
+        WindowsServiceManager(config)
+        if config.is_windows
+        else LinuxServiceManager(config)
+    )

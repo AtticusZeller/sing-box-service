@@ -1,6 +1,6 @@
 import pytest
 
-from sing_box_service.config import show_diff_config
+from sing_box_service.config.utils import show_diff_config
 
 
 def test_show_diff_config(capsys: pytest.CaptureFixture[str]) -> None:
