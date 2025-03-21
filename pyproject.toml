@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sing-box-cli"
-description = "cross-platform sing-box-service manager."
+description = "cross-platform sing-box manager."
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
@@ -39,7 +39,7 @@ documentation = "https://atticuszz.github.io/sing-box-service/"
 Changelog = "https://github.com/atticuszz/sing-box-service/blob/main/CHANGELOG.md"
 
 [project.scripts] # build-backend config needed
-sing-box-cli = "sing_box_service:main" # equal to from python import main; then run main()
+sing-box-cli = "sing_box_cli:main" # equal to from python import main; then run main()
 # FROM: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 
 [tool.uv]
@@ -65,11 +65,11 @@ dev = [
 ]
 
 [tool.hatch.version]
-path = "src/sing_box_service/__init__.py"
+path = "src/sing_box_cli/__init__.py"
 # FROM: https://hatch.pypa.io/latest/version/
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sing_box_service"]
+packages = ["src/sing_box_cli"]
 # FROM: https://hatch.pypa.io/latest/build/
 
 
@@ -234,7 +234,7 @@ pre_commit_hooks = []
 post_commit_hooks = []
 
 [[tool.bumpversion.files]]
-filename = "src/sing_box_service/__init__.py"
+filename = "src/sing_box_cli/__init__.py"
 
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"
