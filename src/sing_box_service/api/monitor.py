@@ -691,7 +691,7 @@ class ResourceMonitor:
 
                     # Wait for next refresh
                     await asyncio.sleep(self.visualizer.refresh_rate - 0.1)
-                except KeyboardInterrupt:
+                except (asyncio.exceptions.CancelledError, KeyboardInterrupt):
                     self.running = False
                     break
                 except Exception as e:
