@@ -34,10 +34,6 @@
         "server": "dns_resolver"
       },
       {
-        "rule_set": "dns-filter",
-        "action": "reject"
-      },
-      {
         "query_type": [
           "A",
           "AAAA"
@@ -85,7 +81,7 @@
       "auto_route": true,
       "strict_route": true,
       "route_exclude_address_set": "geoip-cn",
-      "stack": "mixed"
+      "stack": "system"
     }
   ],
   "outbounds": [
@@ -221,14 +217,6 @@
         "tag": "geoip-cn",
         "format": "binary",
         "url": "https://raw.gh.atticux.me/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
-        "download_detour": "direct",
-        "update_interval": "1d"
-      },
-      {
-        "type": "remote",
-        "tag": "dns-filter",
-        "format": "binary",
-        "url": "https://raw.gh.atticux.me/REIJI007/AdBlock_Rule_For_Sing-box/main/adblock_reject.srs",
         "download_detour": "direct",
         "update_interval": "1d"
       }
