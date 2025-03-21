@@ -93,6 +93,11 @@ class DelayTestResult(FrozenBaseModel):
     delay: int = Field(default=0, description="Outbound delay in milliseconds")
 
 
+class LogEntry(FrozenBaseModel):
+    type: str = Field(description="Logs level")
+    payload: str = Field(description="Log message")
+
+
 # Generic response type for API methods
 T = TypeVar("T", bound=FrozenBaseModel)
 
@@ -182,7 +187,7 @@ class SingBoxAPIClient:
         return model_class.model_validate(raw)
 
     async def _make_stream_request(
-        self, endpoint: str, model_class: type[T]
+        self, endpoint: str, model_class: type[T], params: dict[str, str] | None = None
     ) -> AsyncGenerator[T, None]:
         """
         Make a streaming request to the API.
@@ -190,6 +195,7 @@ class SingBoxAPIClient:
         Args:
             endpoint: API endpoint
             model_class: Pydantic model class to validate response data
+            params: Optional query parameters for the request
 
         Yields:
             Validated model instances from the stream
@@ -198,7 +204,7 @@ class SingBoxAPIClient:
 
         async with httpx.AsyncClient() as client:
             async with client.stream(
-                "GET", url, headers=self.headers, timeout=None
+                "GET", url, headers=self.headers, params=params, timeout=None
             ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
@@ -228,6 +234,19 @@ class SingBoxAPIClient:
             MemoryData object containing memory data (inuse/total in bytes)
         """
         async for data in self._make_stream_request("/memory", MemoryData):
+            yield data
+
+    async def log_stream(
+        self, level: str | None = None
+    ) -> AsyncGenerator[LogEntry, None]:
+        """
+        Get log entries as a stream of updates.
+
+        Yields:
+            LogEntry object containing log data (type/payload)
+        """
+        params = {"level": level} if level else None
+        async for data in self._make_stream_request("/logs", LogEntry, params=params):
             yield data
 
     async def get_connections(self) -> ConnectionData:

@@ -69,11 +69,3 @@ def service_status(ctx: typer.Context) -> None:
     service = create_service(config)
     status = service.status()
     print(f"🏃 Service status: {status}")
-
-
-@service.command("logs")
-def service_logs(ctx: typer.Context) -> None:
-    """Show sing-box service logs"""
-    config = ctx.obj.config
-    service = create_service(config)
-    service.logs()

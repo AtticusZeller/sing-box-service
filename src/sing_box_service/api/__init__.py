@@ -4,11 +4,11 @@ from typing import Annotated
 
 import typer
 
-from sing_box_service.config.config import SingBoxConfig
-
-from ..common import StrOrNone
+from ..common import LogLevel, StrOrNone
+from ..config import SingBoxConfig
 from .client import SingBoxAPIClient
 from .connections import ConnectionsManager
+from .logs import get_logs
 from .monitor import ResourceMonitor, ResourceVisualizer
 from .policy import PolicyGroupManager
 
@@ -26,6 +26,16 @@ ApiTokenOption = Annotated[
         "--token",
         "-t",
         help="Authentication token for the sing-box API, read from configuration file if not provided",
+    ),
+]
+
+LogLevelOption = Annotated[
+    LogLevel,
+    typer.Option(
+        "--log-level",
+        "-l",
+        help="Log level of trace, debug, info, warning, error, fatal, panic",
+        case_sensitive=False,
     ),
 ]
 
@@ -74,3 +84,16 @@ def proxy(
     api_client = create_client(ctx.obj.config, base_url, token)
     manager = PolicyGroupManager(api_client)
     asyncio.run(manager.run())
+
+
+@api.command()
+def logs(
+    ctx: typer.Context,
+    log_level: LogLevelOption = LogLevel.info,
+    base_url: ApiUrlOption = None,
+    token: ApiTokenOption = None,
+) -> None:
+    """Show sing-box logs, requires API token(Optional)"""
+    api_client = create_client(ctx.obj.config, base_url, token)
+    print("⌛ Showing real-time logs (Press Ctrl+C to exit)")
+    asyncio.run(get_logs(api_client, log_level))

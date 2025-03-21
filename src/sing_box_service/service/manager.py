@@ -27,9 +27,6 @@ class ServiceManager:
     def status(self) -> str:
         raise NotImplementedError()
 
-    def logs(self) -> None:
-        raise NotImplementedError()
-
     def disable(self) -> None:
         raise NotImplementedError()
 
@@ -131,19 +128,6 @@ if ($task) {{
         )
         return result.stdout.strip()
 
-    def logs(self) -> None:
-        if not self.log_file.exists():
-            print("⚠️ Log file not found")
-            return
-        try:
-            print("⌛ Showing real-time logs (Press Ctrl+C to exit)")
-            ps_command = (
-                f"Get-Content -Path '{self.log_file}' -Wait -Tail 50 -Encoding UTF8"
-            )
-            subprocess.run(["pwsh", "-Command", ps_command])
-        except KeyboardInterrupt:
-            return
-
     def disable(self) -> None:
         self.stop()
         subprocess.run(
@@ -222,10 +206,6 @@ WantedBy=multi-user.target
             return "Running"
         except Exception:
             return "Stopped"
-
-    def logs(self) -> None:
-        print("⌛ Showing real-time logs (Press Ctrl+C to exit)")
-        subprocess.run(["journalctl", "-u", "sing-box", "-o", "cat", "-f"])
 
     def disable(self) -> None:
         self.stop()
