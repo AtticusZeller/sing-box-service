@@ -5,6 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import httpx
+import typer
 from rich import print
 
 from .utils import check_url, load_json_config, show_diff_config
@@ -12,7 +13,6 @@ from .utils import check_url, load_json_config, show_diff_config
 
 class SingBoxConfig:
     def __init__(self) -> None:
-        self.is_windows = platform.system() == "Windows"
         user = (
             os.environ.get("SUDO_USER")
             or os.environ.get("USER")
@@ -28,22 +28,21 @@ class SingBoxConfig:
             raise FileNotFoundError(f"❌ {bin_filename} not found in PATH")
 
         self.bin_path = Path(bin_path)
-        # TODO: refactor using typer.get_app_dir("sing-box-cli", roaming=True)
         if self.is_windows:
-            self.install_dir = Path(os.environ["ProgramFiles"]) / "sing-box"
+            self.config_dir = Path(typer.get_app_dir("sing-box", roaming=True))
         else:
-            self.user_home = Path(os.path.expanduser(f"~{self.user}"))
-            self.install_dir = self.user_home / ".config/sing-box"
+            # enable run cli without sudo
+            self.config_dir = Path(f"~{self.user}/.config/sing-box").expanduser()
 
-        self.config_file = self.install_dir / "config.json"
-        self.subscription_file = self.install_dir / "subscription.txt"
-        self.cache_db = self.install_dir / "cache.db"
+        self.config_file = self.config_dir / "config.json"
+        self.subscription_file = self.config_dir / "subscription.txt"
+        self.cache_db = self.config_dir / "cache.db"
 
         print(self)
 
     def init_directories(self) -> bool:
         try:
-            self.install_dir.mkdir(parents=True, exist_ok=True)
+            self.config_dir.mkdir(parents=True, exist_ok=True)
             if not self.config_file.exists():
                 self.config_file.write_text("{}")
                 print(f"📁 Created empty config file: {self.config_file}")
@@ -53,13 +52,17 @@ class SingBoxConfig:
                 print(f"📁 Created subscription file: {self.subscription_file}")
 
             if not self.is_windows:
-                shutil.chown(self.install_dir, user=self.user, group=self.user)
+                shutil.chown(self.config_dir, user=self.user, group=self.user)
                 shutil.chown(self.config_file, user=self.user, group=self.user)
                 shutil.chown(self.subscription_file, user=self.user, group=self.user)
         except Exception as e:
             print(f"❌ Failed to initialize directories: {e}")
             return False
         return True
+
+    @property
+    def is_windows(self) -> bool:
+        return platform.system() == "Windows"
 
     @property
     def sub_url(self) -> str:
@@ -149,7 +152,7 @@ class SingBoxConfig:
         )
 
         if self.is_windows:
-            info += f"\n📁 Using installation directory: {self.install_dir}"
+            info += f"\n📁 Using installation directory: {self.config_dir}"
         return info
 
 

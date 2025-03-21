@@ -38,10 +38,10 @@ class WindowsServiceManager(ServiceManager):
     def __init__(self, config: SingBoxConfig) -> None:
         super().__init__(config)
         self.task_name = "sing-box-service"
-        self.log_file = self.config.install_dir / "sing-box.log"
+        self.log_file = self.config.config_dir / "sing-box.log"
 
     def create_service(self) -> None:
-        start_script = self.config.install_dir / "start-singbox.ps1"
+        start_script = self.config.config_dir / "start-singbox.ps1"
         script_content = f"""
 Add-Type -Name Window -Namespace Console -MemberDefinition '
 [DllImport("Kernel32.dll")]
@@ -56,14 +56,14 @@ $console = [Console.Window]::GetConsoleWindow()
 $OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001 | Out-Null
 
-Set-Location "{self.config.install_dir}"
+Set-Location "{self.config.config_dir}"
 
 if (Test-Path "{self.log_file}") {{
     Clear-Content "{self.log_file}"
 }}
 
 try {{
-    & "{self.config.bin_path}" run -C "{self.config.install_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
+    & "{self.config.bin_path}" run -C "{self.config.config_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
 }} catch {{
     $_ | Out-File -FilePath "{self.log_file}" -Append
 }}
@@ -171,7 +171,7 @@ AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME 
 Restart=always
 RestartSec=2
 # start commands
-ExecStart={self.config.bin_path} run -C {self.config.install_dir} -D {self.config.install_dir}
+ExecStart={self.config.bin_path} run -C {self.config.config_dir} -D {self.config.config_dir}
 ExecReload=/bin/kill -HUP $MAINPID
 # IO
 IOSchedulingPriority=0
