@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.27 - 2025-03-21
+
+### 🐛 Bug Fixes
+
+- Catch `asyncio.exceptions.CancelledError` while canceling stats display
+- Logic of load groups, when to update delay and load delay history
+
+### 🚜 Refactor
+
+- Replace SingBoxCli class with typer context and modularize commands files
+- Make_stream_request
+- Display logs from api_client
+- Simplify config_dir
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove EmptyResponse
+- Simplify api commands in top level
+
 ## 0.0.26 - 2025-03-20
 
 ### 🚜 Refactor
