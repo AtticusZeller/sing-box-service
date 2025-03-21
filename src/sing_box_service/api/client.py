@@ -93,12 +93,6 @@ class DelayTestResult(FrozenBaseModel):
     delay: int = Field(default=0, description="Outbound delay in milliseconds")
 
 
-class EmptyResponse(FrozenBaseModel):
-    """Empty response model."""
-
-    status_code: int
-
-
 # Generic response type for API methods
 T = TypeVar("T", bound=FrozenBaseModel)
 
