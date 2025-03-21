@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.28 - 2025-03-21
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove commands about capture logs in windows
+
 ## 0.0.27 - 2025-03-21
 
 ### 🐛 Bug Fixes
