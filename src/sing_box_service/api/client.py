@@ -181,14 +181,20 @@ class SingBoxAPIClient:
         raw = await self._make_request_raw(method, endpoint, params, data)
         return model_class.model_validate(raw)
 
-    async def traffic_stream(self) -> AsyncGenerator[TrafficData, None]:
+    async def _make_stream_request(
+        self, endpoint: str, model_class: type[T]
+    ) -> AsyncGenerator[T, None]:
         """
-        Get traffic statistics as a stream of updates.
+        Make a streaming request to the API.
+
+        Args:
+            endpoint: API endpoint
+            model_class: Pydantic model class to validate response data
 
         Yields:
-            TrafficData object containing traffic data (up/down in B/s)
+            Validated model instances from the stream
         """
-        url = f"{self.base_url}/traffic"
+        url = f"{self.base_url}{endpoint}"
 
         async with httpx.AsyncClient() as client:
             async with client.stream(
@@ -199,10 +205,20 @@ class SingBoxAPIClient:
                     if line.strip():  # Skip empty lines
                         try:
                             data = json.loads(line)
-                            yield TrafficData.model_validate(data)
+                            yield model_class.model_validate(data)
                         except json.JSONDecodeError:
                             # Skip invalid JSON lines
                             continue
+
+    async def traffic_stream(self) -> AsyncGenerator[TrafficData, None]:
+        """
+        Get traffic statistics as a stream of updates.
+
+        Yields:
+            TrafficData object containing traffic data (up/down in B/s)
+        """
+        async for data in self._make_stream_request("/traffic", TrafficData):
+            yield data
 
     async def memory_stream(self) -> AsyncGenerator[MemoryData, None]:
         """
@@ -211,21 +227,8 @@ class SingBoxAPIClient:
         Yields:
             MemoryData object containing memory data (inuse/total in bytes)
         """
-        url = f"{self.base_url}/memory"
-
-        async with httpx.AsyncClient() as client:
-            async with client.stream(
-                "GET", url, headers=self.headers, timeout=None
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if line.strip():  # Skip empty lines
-                        try:
-                            data = json.loads(line)
-                            yield MemoryData.model_validate(data)
-                        except json.JSONDecodeError:
-                            # Skip invalid JSON lines
-                            continue
+        async for data in self._make_stream_request("/memory", MemoryData):
+            yield data
 
     async def get_connections(self) -> ConnectionData:
         """
