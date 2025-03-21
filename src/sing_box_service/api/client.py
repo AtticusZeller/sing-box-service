@@ -75,7 +75,7 @@ class GroupInfo(FrozenBaseModel):
     name: str
     udp: bool = Field(description="UDP support")
     history: list[DelayHistory] = Field(
-        description="History of selected proxies", default=[]
+        description="History delay of selected proxies", default=[]
     )
     now: str = Field(description="Currently selected proxy")
     all: list[str] = Field(description="List of all outbound proxies")
@@ -90,6 +90,7 @@ class GroupsData(FrozenBaseModel):
 class DelayTestResult(FrozenBaseModel):
     """Delay test result model."""
 
+    outbound: str = Field(default="", description="Outbound proxy name")
     delay: int = Field(default=0, description="Outbound delay in milliseconds")
 
 
@@ -309,7 +310,7 @@ class SingBoxAPIClient:
         group_name: str,
         url: str = "https://cp.cloudflare.com/generate_204",
         timeout: int = 5000,
-    ) -> dict[str, Any]:
+    ) -> list[DelayTestResult]:
         """
         Test delay for all proxies in a policy group.
 
@@ -318,9 +319,12 @@ class SingBoxAPIClient:
             timeout: Timeout in milliseconds
         """
         params = {"url": url, "timeout": timeout}
-        return await self._make_request_raw(
+        reps = await self._make_request_raw(
             "GET", f"/group/{group_name}/delay", params=params
         )
+        return [
+            DelayTestResult(outbound=key, delay=value) for key, value in reps.items()
+        ]
 
     async def test_proxy_delay(
         self,

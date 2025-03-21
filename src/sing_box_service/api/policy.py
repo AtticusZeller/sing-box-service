@@ -28,9 +28,7 @@ def create_policy_group_table(
     current = group_data.now
     proxies = group_data.all
     # Get delay information, prioritizing the cache
-    # TODO: no sure if this is the best way to handle this
     history = group_data.history
-    history_dict = {item.time: item.delay for item in history} if history else {}
 
     # Create table for proxies
     table = Table(expand=True, show_header=True)
@@ -48,8 +46,9 @@ def create_policy_group_table(
                 latency = f"{delay} ms"
             else:
                 latency = "Timeout"
-        elif proxy in history_dict:
-            delay = history_dict[proxy]
+        elif i == group_data.all.index(current):
+            # [0]->latest delay for the current proxy
+            delay = history[0].delay if history else -1
             if delay > 0:
                 latency = f"{delay} ms"
             else:
@@ -92,7 +91,6 @@ class PolicyGroupManager:
         self.selected_proxy_index = 0
         self.current_group: GroupInfo | None = None
         self.status_message = "Loading policy groups..."
-        self.running = False
 
         # Add a delay cache to store test results
         # Format: {group_name: {proxy_name: delay_value}}
@@ -126,6 +124,9 @@ class PolicyGroupManager:
             """Switch between group list and proxy list."""
             if self.focus_on_groups:
                 self.focus_on_groups = False
+                # initiate a test for the selected group
+                if self.current_group:
+                    asyncio.create_task(self.test_group_delay(self.current_group.name))
             else:
                 self.focus_on_groups = True
 
@@ -298,19 +299,7 @@ class PolicyGroupManager:
             self.status_message = f"Loading group: {group_name}..."
 
             data = await self.api_client.get_group(group_name)
-
-            # Make sure we have the history data
-            # Try to fetch delay data if not present
-            try:
-                await self.api_client.test_group_delay(group_name)
-                # Fetch the group data again to get updated delay information
-                data = await self.api_client.get_group(group_name)
-            except Exception:
-                # If testing fails, continue with existing data
-                pass
-
             self.current_group = data
-            self.selected_proxy_index = 0
 
             # Find the index of the currently selected proxy
             current = data.now
@@ -372,16 +361,9 @@ class PolicyGroupManager:
             if group_name not in self.delay_cache:
                 self.delay_cache[group_name] = {}
 
-            # Test each proxy individually to ensure we get all results
-            # TODO: Consider batching these requests
-            for proxy in proxies:
-                try:
-                    result = await self.api_client.test_proxy_delay(proxy)
-                    delay = result.delay
-                    self.delay_cache[group_name][proxy] = delay
-                except Exception:
-                    # If one proxy test fails, continue with others
-                    pass
+            results = await self.api_client.test_group_delay(group_name)
+            for result in results:
+                self.delay_cache[group_name][result.outbound] = result.delay
 
             self.status_message = f"Tested all proxies in group: {group_name}"
         except Exception as e:
@@ -389,30 +371,11 @@ class PolicyGroupManager:
 
     async def run(self) -> None:
         """Run the policy group manager."""
-        self.running = True
-
-        # Initial load of groups
-        await self.load_groups()
-        # Setup periodic refresh task
-        refresh_task = asyncio.create_task(self.periodic_refresh())
 
         try:
+            # Initial load of groups
+            await self.load_groups()
             await self.app.run_async()
-        finally:
-            self.running = False
-            # Clean up refresh task
-            refresh_task.cancel()
-            try:
-                await refresh_task
-            except asyncio.CancelledError:
-                pass
-
-    async def periodic_refresh(self, interval: float = 5.0) -> None:
-        """Periodically refresh the policy group data."""
-        while self.running:
-            try:
-                await asyncio.sleep(interval)
-                if self.current_group:
-                    await self.load_selected_group()
-            except asyncio.CancelledError:
-                break
+        except Exception as e:
+            self.status_message = f"Error running application: {str(e)}"
+            await asyncio.sleep(5)
