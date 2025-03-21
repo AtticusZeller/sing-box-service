@@ -38,7 +38,6 @@ class WindowsServiceManager(ServiceManager):
     def __init__(self, config: SingBoxConfig) -> None:
         super().__init__(config)
         self.task_name = "sing-box-service"
-        self.log_file = self.config.config_dir / "sing-box.log"
 
     def create_service(self) -> None:
         start_script = self.config.config_dir / "start-singbox.ps1"
@@ -52,21 +51,9 @@ public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 $console = [Console.Window]::GetConsoleWindow()
 [Console.Window]::ShowWindow($console, 0)
 
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$OutputEncoding = [System.Text.Encoding]::UTF8
-chcp 65001 | Out-Null
-
 Set-Location "{self.config.config_dir}"
 
-if (Test-Path "{self.log_file}") {{
-    Clear-Content "{self.log_file}"
-}}
-
-try {{
-    & "{self.config.bin_path}" run -C "{self.config.config_dir}" *>&1 | Tee-Object -FilePath "{self.log_file}" -Append
-}} catch {{
-    $_ | Out-File -FilePath "{self.log_file}" -Append
-}}
+& "{self.config.bin_path}" run -C "{self.config.config_dir}"
 """
         start_script.write_text(script_content, encoding="utf-8")
 
