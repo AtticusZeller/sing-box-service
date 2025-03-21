@@ -22,7 +22,7 @@ class SharedContext:
 
 
 app = typer.Typer(help="sing-box manager.")
-app.add_typer(api_app, name="api")
+app.add_typer(api_app)
 app.add_typer(service_app, name="service")
 app.add_typer(config_app, name="config")
 
