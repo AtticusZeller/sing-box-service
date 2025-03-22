@@ -14,7 +14,7 @@ def service_enable(ctx: typer.Context) -> None:
     """Create sing-box service, enable autostart and start service"""
     ensure_root()
     config = ctx.obj.config
-    service = create_service(config)
+    service = ctx.obj.service
     service.create_service()
     service.start()
     print("🔥 Service started.")
@@ -26,8 +26,7 @@ def service_enable(ctx: typer.Context) -> None:
 def service_disable(ctx: typer.Context) -> None:
     """Stop service, disable sing-box service autostart and remove service"""
     ensure_root()
-    config = ctx.obj.config
-    service = create_service(config)
+    service = ctx.obj.service
     service.stop()
     service.disable()
     print("✋ Autostart disabled.")
@@ -38,7 +37,7 @@ def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> N
     """Restart sing-box service, update configuration if needed, create service if not exists"""
     ensure_root()
     config = ctx.obj.config
-    service = create_service(config)
+    service = ctx.obj.service
     if not service.check_service():
         service.create_service()
     if update:
@@ -58,8 +57,7 @@ def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> N
 def service_stop(ctx: typer.Context) -> None:
     """Stop sing-box service"""
     ensure_root()
-    config = ctx.obj.config
-    service = create_service(config)
+    service = ctx.obj.service
     service.stop()
     print("✋ Service stopped.")
 
@@ -68,7 +66,6 @@ def service_stop(ctx: typer.Context) -> None:
 def service_status(ctx: typer.Context) -> None:
     """Check service status"""
     ensure_root()
-    config = ctx.obj.config
-    service = create_service(config)
+    service = ctx.obj.service
     status = service.status()
     print(f"🏃 Service status: {status}")
