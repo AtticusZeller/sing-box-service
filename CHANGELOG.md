@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.29 - 2025-03-22
+
+### 🚀 Features
+
+- Add update option for `run` and `service restart` to update config automatically
+- Add `--restart` option for `config add-sub`
+
+### 📚 Documentation
+
+- Fix email
+
+### ⚙️ Miscellaneous Tasks
+
+- Rename dir sing_box_service as sing_box_cli
+- Replace creating service  instance manually with context object
+
 ## 0.0.28 - 2025-03-21
 
 ### ⚙️ Miscellaneous Tasks
