@@ -7,22 +7,33 @@ from .config import SingBoxConfig, get_config
 
 __all__ = ["config", "SingBoxConfig", "get_config"]
 
+SubUrlArg = Annotated[str, typer.Argument(help="Subscription URL")]
+RestartServiceOption = Annotated[
+    bool, typer.Option("--restart", "-r", help="Restart service after update.")
+]
+
 config = typer.Typer(help="Configuration management commands")
 
 
 @config.command("add-sub")
-def config_add_sub(ctx: typer.Context, url: Annotated[str, typer.Argument()]) -> None:
-    """Add subscription URL"""
-    ensure_root()
+def config_add_sub(
+    ctx: typer.Context, url: SubUrlArg, restart: RestartServiceOption = False
+) -> None:
+    """Add subscription URL, download configuration and restart service if needed"""
     if ctx.obj.config.add_subscription(url):
-        # restart service if subscription is updated
-        if not ctx.obj.service.check_service():
-            ctx.obj.service.create_service()
-            print("⌛ Service created successfully.")
+        # download config
         if ctx.obj.config.update_config():
-            ctx.obj.service.restart()
+            print("✅ Configuration updated.")
         else:
+            print("❌ Failed to update configuration.")
             raise typer.Exit(1)
+        if restart:
+            ensure_root()
+            # init service
+            if not ctx.obj.service.check_service():
+                ctx.obj.service.create_service()
+                print("⌛ Service created successfully.")
+            ctx.obj.service.restart()
     else:
         print("❌ Failed to add subscription.")
         raise typer.Exit(1)
