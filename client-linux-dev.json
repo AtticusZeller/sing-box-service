@@ -53,7 +53,7 @@
       {
         "rule_set": "direct-rule",
         "client_subnet": "180.110.148.0/24",
-        "server": "dns_proxy"
+        "server": "dns_direct"
       }
     ],
     "final": "dns_proxy",
