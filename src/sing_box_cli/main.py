@@ -5,7 +5,7 @@ import typer
 from rich import print
 
 from .api import api as api_app
-from .common import ensure_root
+from .common import UpdateConfigOption, ensure_root
 from .config import SingBoxConfig, config as config_app, get_config
 from .service import (
     LinuxServiceManager,
@@ -35,26 +35,22 @@ def callback(ctx: typer.Context) -> None:
 
 
 @app.command()
-def run(ctx: typer.Context) -> None:
+def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
     """Run sing-box if host's service unavailable"""
     ensure_root()
     cfg = ctx.obj.config
-    if cfg.update_config():
-        cmd = [
-            cfg.bin_path,
-            "run",
-            "-C",
-            str(cfg.install_dir),
-            "-D",
-            str(cfg.install_dir),
-        ]
-        if cfg.is_windows:
-            subprocess.run(["pwsh"] + cmd)
+    if update:
+        if cfg.update_config():
+            print("✅ Configuration updated.")
         else:
-            subprocess.run(cmd)
+            print("❌ Failed to update configuration.")
+            raise typer.Exit(1)
+
+    cmd = [cfg.bin_path, "run", "-C", str(cfg.config_dir), "-D", str(cfg.config_dir)]
+    if cfg.is_windows:
+        subprocess.run(["pwsh"] + cmd)
     else:
-        print("❌ Failed to update configuration.")
-        raise typer.Exit(1)
+        subprocess.run(cmd)
 
 
 @app.command()

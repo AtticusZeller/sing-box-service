@@ -1,7 +1,13 @@
 import os
 from enum import Enum
+from typing import Annotated
+
+import typer
 
 StrOrNone = str | None
+UpdateConfigOption = Annotated[
+    bool, typer.Option("--update", "-u", help="Update configuration before running.")
+]
 
 
 class LogLevel(str, Enum):

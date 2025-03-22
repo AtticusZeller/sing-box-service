@@ -1,6 +1,6 @@
 import typer
 
-from ..common import ensure_root
+from ..common import UpdateConfigOption, ensure_root
 from .manager import LinuxServiceManager, WindowsServiceManager, create_service
 
 __all__ = ["service", "WindowsServiceManager", "LinuxServiceManager", "create_service"]
@@ -34,18 +34,21 @@ def service_disable(ctx: typer.Context) -> None:
 
 
 @service.command("restart")
-def service_restart(ctx: typer.Context) -> None:
+def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
     """Restart sing-box service, update configuration if needed, create service if not exists"""
     ensure_root()
     config = ctx.obj.config
     service = create_service(config)
     if not service.check_service():
         service.create_service()
-    if config.update_config():
-        service.restart()
-    else:
-        print("❌ Failed to update configuration.")
-        raise typer.Exit(1)
+    if update:
+        if config.update_config():
+            print("✅ Configuration updated.")
+        else:
+            print("❌ Failed to update configuration.")
+            raise typer.Exit(1)
+
+    service.restart()
     print("🔥 Service restarted.")
     if config.api_base_url:
         print(f"🔌 Default API: {config.api_base_url}")
