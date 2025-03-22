@@ -40,13 +40,6 @@
     ],
     "rules": [
       {
-        "query_type": [
-          "A",
-          "AAAA"
-        ],
-        "server": "dns_fakeip"
-      },
-      {
         "rule_set": "proxy-rule",
         "server": "dns_proxy"
       },

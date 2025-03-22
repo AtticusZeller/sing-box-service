@@ -11,12 +11,6 @@
         "detour": "direct"
       },
       {
-        "tag": "dns_direct",
-        "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
-        "address_resolver": "dns_resolver",
-        "detour": "direct"
-      },
-      {
         "tag": "dns_proxy",
         "address": "h3://dns.atticux.me/dns-query/asfljsndfaoifa",
         "address_resolver": "dns_resolver",
@@ -34,19 +28,12 @@
         "server": "dns_resolver"
       },
       {
-        "query_type": [
-          "A",
-          "AAAA"
-        ],
-        "server": "dns_fakeip"
-      },
-      {
         "rule_set": "proxy-rule",
         "server": "dns_proxy"
       },
       {
         "rule_set": "direct-rule",
-        "server": "dns_direct"
+        "server": "dns_resolver"
       }
     ],
     "final": "dns_proxy",
