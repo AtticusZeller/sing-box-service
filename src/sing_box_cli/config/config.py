@@ -78,7 +78,7 @@ class SingBoxConfig:
     @sub_url.setter
     def sub_url(self, value: str) -> None:
         self.subscription_file.write_text(value.strip())
-        print("📁 Subscription added successfully.")
+        print("📁 Subscription updated successfully.")
 
     @property
     def api_base_url(self) -> str:
