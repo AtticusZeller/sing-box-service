@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.31 - 2025-03-23
+
+### 🐛 Bug Fixes
+
+- Typo
+
 ## 0.0.30 - 2025-03-23
 
 ### 🚀 Features
