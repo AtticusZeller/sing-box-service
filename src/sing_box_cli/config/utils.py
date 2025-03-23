@@ -49,3 +49,14 @@ def load_json_config(config_file: Path) -> dict[str, Any]:
     except Exception as e:
         print(f"❌ Failed to load configuration: {e}")
         return {}
+
+
+def request_get(url: str, token: str) -> httpx.Response | None:
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    try:
+        response = httpx.get(url, headers=headers)
+        response.raise_for_status()
+        return response
+    except Exception as e:
+        print(f"❌ Failed to get from {url}: {e}")
+        return None

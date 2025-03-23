@@ -4,11 +4,11 @@ import shutil
 from functools import lru_cache
 from pathlib import Path
 
-import httpx
 import typer
 from rich import print
 
-from .utils import check_url, load_json_config, show_diff_config
+from ..common import StrOrNone
+from .utils import load_json_config, request_get, show_diff_config
 
 
 class SingBoxConfig:
@@ -36,6 +36,7 @@ class SingBoxConfig:
 
         self.config_file = self.config_dir / "config.json"
         self.subscription_file = self.config_dir / "subscription.txt"
+        self.token_file = self.config_dir / "token.txt"
         self.cache_db = self.config_dir / "cache.db"
 
         print(self)
@@ -50,6 +51,10 @@ class SingBoxConfig:
             if not self.subscription_file.exists():
                 self.subscription_file.touch()
                 print(f"📁 Created subscription file: {self.subscription_file}")
+
+            if not self.token_file.exists():
+                self.token_file.touch()
+                print(f"📁 Created token file: {self.token_file}")
 
             if not self.is_windows:
                 shutil.chown(self.config_dir, user=self.user, group=self.user)
@@ -69,6 +74,11 @@ class SingBoxConfig:
         if not self.subscription_file.exists():
             return ""
         return self.subscription_file.read_text().strip()
+
+    @sub_url.setter
+    def sub_url(self, value: str) -> None:
+        self.subscription_file.write_text(value.strip())
+        print("📁 Subscription added successfully.")
 
     @property
     def api_base_url(self) -> str:
@@ -92,42 +102,67 @@ class SingBoxConfig:
             return token
         return ""
 
-    def update_config(self) -> bool:
-        """download configuration from subscription URL and show differences"""
-        if not self.sub_url:
-            print("❌ No valid subscription URL found.")
-            return False
-
-        current_config = (
+    @property
+    def config_file_content(self) -> str:
+        return (
             self.config_file.read_text(encoding="utf-8")
             if self.config_file.exists()
             else "{}"
         )
-        print(f"⌛ Updating configuration from {self.sub_url}")
+
+    @config_file_content.setter
+    def config_file_content(self, value: str) -> None:
+        self.config_file.write_text(value, encoding="utf-8")
+        print("📁 Configuration updated successfully.")
+
+    @property
+    def token_content(self) -> str:
+        return self.token_file.read_text().strip() if self.token_file.exists() else ""
+
+    @token_content.setter
+    def token_content(self, value: str) -> None:
+        self.token_file.write_text(value.strip())
+        print("🔑 Token added successfully.")
+
+    def update_config(self, sub_url: StrOrNone = None, token: StrOrNone = None) -> bool:
+        """download configuration from subscription URL and show differences"""
         try:
-            response = httpx.get(self.sub_url)
-            response.raise_for_status()
+            if sub_url is None:
+                # load from file
+                if not self.sub_url:
+                    print("❌ No subscription URL found.")
+                    return False
+                sub_url = self.sub_url
+            if token is None:
+                # load from file
+                token = self.token_content
+            print(f"⌛ Updating configuration from {sub_url}")
+            response = request_get(sub_url, token)
+            if response is None:
+                print("❌ Failed to get configuration.")
+                return False
+
             new_config = response.text
-            self.config_file.write_text(new_config, encoding="utf-8")
+
             if not self.is_windows:
                 shutil.chown(self.config_file, user=self.user, group=self.user)
 
-            if current_config == new_config:
+            if self.config_file_content == new_config:
                 print("📄 Configuration is up to date.")
             else:
-                show_diff_config(current_config, new_config)
+                # update and show differences
+                show_diff_config(self.config_file_content, new_config)
+                self.config_file_content = new_config
 
+            # update subscription url file
+            if sub_url != self.sub_url:
+                self.sub_url = sub_url
+            if token != self.token_content:
+                self.token_content = token
             return True
         except Exception as e:
             print(f"❌ Failed to update configuration: {e}")
             return False
-
-    def add_subscription(self, url: str) -> bool:
-        if not check_url(url):
-            return False
-        self.subscription_file.write_text(url.strip())
-        print("📁 Subscription added successfully.")
-        return True
 
     def show_config(self) -> None:
         print(self.config_file.read_text(encoding="utf-8"))
