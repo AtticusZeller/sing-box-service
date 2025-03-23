@@ -73,10 +73,10 @@
       "mtu": 1280,
       "system": true,
       "address": [
-        "104.23.96.99/32",
-        "104.23.99.59/32"
+        "172.16.0.2/32",
+        "2606:4700:110:8532:fa20:cd14:2852:2cec/128"
       ],
-      "private_key": "eMMwlJQ94C9Fv9punQqY3/cglivO0g5SwPOruAulJHI=",
+      "private_key": "MLOOCjCzM1hWJKxk/UXimIXL0/zrdE1AFv8RFMl7xUA=",
       "peers": [
         {
           "address": "engage.cloudflareclient.com",
