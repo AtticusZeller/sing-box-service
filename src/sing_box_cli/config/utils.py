@@ -33,7 +33,7 @@ def show_diff_config(current_config: str, new_config: str) -> None:
             print(f"[white]{line}[/white]")
 
 
-def load_json_config(config_file: Path) -> dict[str, Any]:
+def load_json_asdict(config_file: Path) -> dict[str, Any]:
     try:
         return dict(json.loads(config_file.read_text(encoding="utf-8")))
     except Exception as e:

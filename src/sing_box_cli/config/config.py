@@ -8,7 +8,7 @@ import typer
 from rich import print
 
 from ..common import StrOrNone
-from .utils import load_json_config, request_get, show_diff_config
+from .utils import load_json_asdict, request_get, show_diff_config
 
 
 class SingBoxConfig:
@@ -82,7 +82,7 @@ class SingBoxConfig:
 
     @property
     def api_base_url(self) -> str:
-        config = load_json_config(self.config_file)
+        config = load_json_asdict(self.config_file)
         url = (
             config.get("experimental", {})
             .get("clash_api", {})
@@ -96,7 +96,7 @@ class SingBoxConfig:
 
     @property
     def api_secret(self) -> str:
-        config = load_json_config(self.config_file)
+        config = load_json_asdict(self.config_file)
         token = config.get("experimental", {}).get("clash_api", {}).get("secret", "")
         if isinstance(token, str) and token:
             return token
