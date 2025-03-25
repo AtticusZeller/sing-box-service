@@ -40,31 +40,14 @@ class WindowsServiceManager(ServiceManager):
         self.task_name = "sing-box-service"
 
     def create_service(self) -> None:
-        start_script = self.config.config_dir / "start-singbox.ps1"
-        script_content = f"""
-Add-Type -Name Window -Namespace Console -MemberDefinition '
-[DllImport("Kernel32.dll")]
-public static extern IntPtr GetConsoleWindow();
-[DllImport("user32.dll")]
-public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
-'
-$console = [Console.Window]::GetConsoleWindow()
-[Console.Window]::ShowWindow($console, 0)
-
-Set-Location "{self.config.config_dir}"
-
-& "{self.config.bin_path}" run -C "{self.config.config_dir}"
-"""
-        start_script.write_text(script_content, encoding="utf-8")
-
         ps_command = f"""
 $action = New-ScheduledTaskAction `
     -Execute "pwsh.exe" `
-    -Argument "-ExecutionPolicy Bypass -NoLogo -WindowStyle Hidden -File `"{start_script}`""
+    -Argument "-WindowStyle Hidden -Command `"{self.config.bin_path}`" run -C `"{self.config.config_dir}`""
 
-$trigger = New-ScheduledTaskTrigger -AtLogon
+$trigger = New-ScheduledTaskTrigger -AtStartup
 $principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -Priority 0 -DontStopIfGoingOnBatteries -DontStopOnIdleEnd -RestartCount 10
 
 Register-ScheduledTask -TaskName "{self.task_name}" `
     -Action $action `
