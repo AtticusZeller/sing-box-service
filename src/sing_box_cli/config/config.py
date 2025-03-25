@@ -174,11 +174,17 @@ class SingBoxConfig:
             print("❌ No subscription URL found.")
 
     def clean_cache(self) -> None:
-        if self.cache_db.exists():
+        try:
             self.cache_db.unlink()
             print("🗑️ Cache database removed.")
-        else:
+        except FileNotFoundError:
             print("❌ Cache database not found.")
+        except PermissionError:
+            print(
+                "❌ Permission denied to remove cache database. Stop the service first."
+            )
+        except Exception as e:
+            print(f"❌ Failed to remove cache database: {e}")
 
     def __str__(self) -> str:
         info = (
