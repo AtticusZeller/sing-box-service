@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.34 - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- Print friendly as `ensure_root()` failed
+
+### 🚜 Refactor
+
+- Create_service pwsh command
+
 ## 0.0.33 - 2025-03-25
 
 ### 🚜 Refactor
