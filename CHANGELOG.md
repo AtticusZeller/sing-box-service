@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.32 - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- Clean_cache exception handle in windows
+- `run` in windows
+
 ## 0.0.31 - 2025-03-23
 
 ### 🐛 Bug Fixes
