@@ -19,7 +19,6 @@ RestartServiceOption = Annotated[
 config = typer.Typer(help="Configuration management commands")
 
 
-# TODO: save url for update if provided
 @config.command("update")
 def config_update(
     ctx: typer.Context,
