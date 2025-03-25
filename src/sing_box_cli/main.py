@@ -47,10 +47,7 @@ def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
             raise typer.Exit(1)
 
     cmd = [cfg.bin_path, "run", "-C", str(cfg.config_dir), "-D", str(cfg.config_dir)]
-    if cfg.is_windows:
-        subprocess.run(["pwsh"] + cmd)
-    else:
-        subprocess.run(cmd)
+    subprocess.run(cmd)
 
 
 @app.command()
