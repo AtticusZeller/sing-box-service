@@ -1,6 +1,7 @@
 from typing import Annotated
 
 import typer
+from rich import print
 
 from ..common import StrOrNone, ensure_root
 from .config import SingBoxConfig, get_config
@@ -44,13 +45,17 @@ def config_update(
 @config.command("show-sub")
 def config_show_sub(ctx: typer.Context) -> None:
     """Show subscription URL"""
-    ctx.obj.config.show_subscription()
+    sub_url = ctx.obj.config.sub_url
+    if sub_url:
+        print(f"🔗 Current subscription URL: {sub_url}")
+    else:
+        print("❌ No subscription URL found.")
 
 
 @config.command("show")
 def config_show(ctx: typer.Context) -> None:
     """Show configuration file"""
-    ctx.obj.config.show_config()
+    print(ctx.obj.config.config_file_content)
 
 
 @config.command("clean_cache")

@@ -164,9 +164,6 @@ class SingBoxConfig:
             print(f"❌ Failed to update configuration: {e}")
             return False
 
-    def show_config(self) -> None:
-        print(self.config_file.read_text(encoding="utf-8"))
-
     def show_subscription(self) -> None:
         if self.sub_url:
             print(f"🔗 Current subscription URL: {self.sub_url}")
