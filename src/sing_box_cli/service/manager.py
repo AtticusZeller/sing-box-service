@@ -2,7 +2,7 @@ import subprocess
 from functools import lru_cache
 from pathlib import Path
 
-from ..config import SingBoxConfig
+from ..config.config import SingBoxConfig
 
 
 class ServiceManager:

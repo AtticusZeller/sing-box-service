@@ -5,7 +5,8 @@ from typing import Annotated
 import typer
 
 from ..common import LogLevel, StrOrNone
-from ..config import SingBoxConfig
+from ..config.config import SingBoxConfig
+from ..service import get_context_obj
 from .client import SingBoxAPIClient
 from .connections import ConnectionsManager
 from .logs import get_logs
@@ -59,8 +60,8 @@ def stats(
     ctx: typer.Context, base_url: ApiUrlOption = None, token: ApiTokenOption = None
 ) -> None:
     """Show sing-box traffic, memory statistics and connections, requires API token(Optional)"""
-
-    api_client = create_client(ctx.obj.config, base_url, token)
+    ctx_obj = get_context_obj(ctx)
+    api_client = create_client(ctx_obj.config, base_url, token)
     visualizer = ResourceVisualizer()
     monitor = ResourceMonitor(api_client, visualizer)
     asyncio.run(monitor.start())
@@ -71,7 +72,8 @@ def conns(
     ctx: typer.Context, base_url: ApiUrlOption = None, token: ApiTokenOption = None
 ) -> None:
     """Manage sing-box connections, requires API token(Optional)"""
-    api_client = create_client(ctx.obj.config, base_url, token)
+    ctx_obj = get_context_obj(ctx)
+    api_client = create_client(ctx_obj.config, base_url, token)
     manager = ConnectionsManager(api_client)
     asyncio.run(manager.run())
 
@@ -81,7 +83,8 @@ def proxy(
     ctx: typer.Context, base_url: ApiUrlOption = None, token: ApiTokenOption = None
 ) -> None:
     """Manage sing-box policy groups, requires API token(Optional)"""
-    api_client = create_client(ctx.obj.config, base_url, token)
+    ctx_obj = get_context_obj(ctx)
+    api_client = create_client(ctx_obj.config, base_url, token)
     manager = PolicyGroupManager(api_client)
     asyncio.run(manager.run())
 
@@ -94,6 +97,7 @@ def logs(
     token: ApiTokenOption = None,
 ) -> None:
     """Show sing-box logs, requires API token(Optional)"""
-    api_client = create_client(ctx.obj.config, base_url, token)
+    ctx_obj = get_context_obj(ctx)
+    api_client = create_client(ctx_obj.config, base_url, token)
     print("⌛ Showing real-time logs (Press Ctrl+C to exit)")
     asyncio.run(get_logs(api_client, log_level))

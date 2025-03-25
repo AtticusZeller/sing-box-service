@@ -4,9 +4,9 @@ import typer
 from rich import print
 
 from ..common import StrOrNone, ensure_root
-from .config import SingBoxConfig, get_config
+from ..service import get_context_obj
 
-__all__ = ["config", "SingBoxConfig", "get_config"]
+__all__ = ["config"]
 
 SubUrlArg = Annotated[str, typer.Argument(help="Subscription URL")]
 TokenOption = Annotated[
@@ -27,7 +27,8 @@ def config_update(
     restart: RestartServiceOption = False,
 ) -> None:
     """download configuration, save subscription url and restart service if needed"""
-    if ctx.obj.config.update_config(url, token):
+    ctx_obj = get_context_obj(ctx)
+    if ctx_obj.config.update_config(url, token):
         pass
     else:
         print("❌ Failed to update configuration.")
@@ -35,16 +36,17 @@ def config_update(
     if restart:
         ensure_root()
         # init service
-        if not ctx.obj.service.check_service():
-            ctx.obj.service.create_service()
+        if not ctx_obj.service.check_service():
+            ctx_obj.service.create_service()
             print("⌛ Service created successfully.")
-        ctx.obj.service.restart()
+        ctx_obj.service.restart()
 
 
 @config.command("show-sub")
 def config_show_sub(ctx: typer.Context) -> None:
     """Show subscription URL"""
-    sub_url = ctx.obj.config.sub_url
+    ctx_obj = get_context_obj(ctx)
+    sub_url = ctx_obj.config.sub_url
     if sub_url:
         print(f"🔗 Current subscription URL: {sub_url}")
     else:
@@ -54,10 +56,12 @@ def config_show_sub(ctx: typer.Context) -> None:
 @config.command("show")
 def config_show(ctx: typer.Context) -> None:
     """Show configuration file"""
-    print(ctx.obj.config.config_file_content)
+    ctx_obj = get_context_obj(ctx)
+    print(ctx_obj.config.config_file_content)
 
 
 @config.command("clean_cache")
 def config_clean_cache(ctx: typer.Context) -> None:
     """Clean cache database"""
-    ctx.obj.config.clean_cache()
+    ctx_obj = get_context_obj(ctx)
+    ctx_obj.config.clean_cache()

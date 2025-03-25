@@ -1,20 +1,37 @@
+from dataclasses import dataclass
+from functools import lru_cache
+from typing import cast
+
 import typer
 
 from ..common import UpdateConfigOption, ensure_root
-from .manager import LinuxServiceManager, WindowsServiceManager, create_service
+from ..config.config import SingBoxConfig
+from .manager import LinuxServiceManager, WindowsServiceManager
 
-__all__ = ["service", "WindowsServiceManager", "LinuxServiceManager", "create_service"]
+__all__ = ["service", "SharedContext", "get_context_obj"]
 
 
 service = typer.Typer(help="Service management commands")
+
+
+@dataclass
+class SharedContext:
+    config: SingBoxConfig
+    service: WindowsServiceManager | LinuxServiceManager
+
+
+@lru_cache
+def get_context_obj(ctx: typer.Context) -> SharedContext:
+    return cast(SharedContext, ctx.obj)
 
 
 @service.command("enable")
 def service_enable(ctx: typer.Context) -> None:
     """Create sing-box service, enable autostart and start service"""
     ensure_root()
-    config = ctx.obj.config
-    service = ctx.obj.service
+    ctx_obj = get_context_obj(ctx)
+    config = ctx_obj.config
+    service = ctx_obj.service
     service.create_service()
     service.start()
     print("🔥 Service started.")
@@ -26,7 +43,8 @@ def service_enable(ctx: typer.Context) -> None:
 def service_disable(ctx: typer.Context) -> None:
     """Stop service, disable sing-box service autostart and remove service"""
     ensure_root()
-    service = ctx.obj.service
+    ctx_obj = get_context_obj(ctx)
+    service = ctx_obj.service
     service.stop()
     service.disable()
     print("✋ Autostart disabled.")
@@ -36,8 +54,9 @@ def service_disable(ctx: typer.Context) -> None:
 def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
     """Restart sing-box service, update configuration if needed, create service if not exists"""
     ensure_root()
-    config = ctx.obj.config
-    service = ctx.obj.service
+    ctx_obj = get_context_obj(ctx)
+    config = ctx_obj.config
+    service = ctx_obj.service
     if not service.check_service():
         service.create_service()
     if update:
@@ -57,7 +76,8 @@ def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> N
 def service_stop(ctx: typer.Context) -> None:
     """Stop sing-box service"""
     ensure_root()
-    service = ctx.obj.service
+    ctx_obj = get_context_obj(ctx)
+    service = ctx_obj.service
     service.stop()
     print("✋ Service stopped.")
 
@@ -66,6 +86,7 @@ def service_stop(ctx: typer.Context) -> None:
 def service_status(ctx: typer.Context) -> None:
     """Check service status"""
     ensure_root()
-    service = ctx.obj.service
+    ctx_obj = get_context_obj(ctx)
+    service = ctx_obj.service
     status = service.status()
     print(f"🏃 Service status: {status}")

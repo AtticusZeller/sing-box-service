@@ -1,25 +1,14 @@
 import subprocess
-from dataclasses import dataclass
 
 import typer
 from rich import print
 
 from .api import api as api_app
 from .common import UpdateConfigOption, ensure_root
-from .config import SingBoxConfig, config as config_app, get_config
-from .service import (
-    LinuxServiceManager,
-    WindowsServiceManager,
-    create_service,
-    service as service_app,
-)
-
-
-@dataclass
-class SharedContext:
-    config: SingBoxConfig
-    service: WindowsServiceManager | LinuxServiceManager
-
+from .config import config as config_app
+from .config.config import get_config
+from .service import SharedContext, get_context_obj, service as service_app
+from .service.manager import create_service
 
 app = typer.Typer(help="sing-box manager.")
 app.add_typer(api_app)
@@ -38,7 +27,7 @@ def callback(ctx: typer.Context) -> None:
 def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
     """Run sing-box if host's service unavailable"""
     ensure_root()
-    cfg = ctx.obj.config
+    cfg = get_context_obj(ctx).config
     if update:
         if cfg.update_config():
             print("✅ Configuration updated.")
@@ -46,7 +35,14 @@ def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
             print("❌ Failed to update configuration.")
             raise typer.Exit(1)
 
-    cmd = [cfg.bin_path, "run", "-C", str(cfg.config_dir), "-D", str(cfg.config_dir)]
+    cmd = [
+        str(cfg.bin_path),
+        "run",
+        "-C",
+        str(cfg.config_dir),
+        "-D",
+        str(cfg.config_dir),
+    ]
     subprocess.run(cmd)
 
 
@@ -56,7 +52,7 @@ def version(ctx: typer.Context) -> None:
     from . import __version__
 
     print(f"🔖 sing-box-cli {__version__}")
-    print(f"📦 {ctx.obj.service.version()}")
+    print(f"📦 {get_context_obj(ctx).service.version()}")
 
 
 def main() -> None:
