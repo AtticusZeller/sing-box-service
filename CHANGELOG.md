@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.33 - 2025-03-25
+
+### 🚜 Refactor
+
+- Apply type cast for typer.Context
+
+### ⚙️ Miscellaneous Tasks
+
+- Simplify methods of config class
+- Remove #TODO:
+- Remove duplicate print
+- Add test for windows
+
 ## 0.0.32 - 2025-03-25
 
 ### 🐛 Bug Fixes
