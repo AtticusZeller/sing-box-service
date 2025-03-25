@@ -30,7 +30,7 @@ def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
     cfg = get_context_obj(ctx).config
     if update:
         if cfg.update_config():
-            print("✅ Configuration updated.")
+            pass
         else:
             print("❌ Failed to update configuration.")
             raise typer.Exit(1)

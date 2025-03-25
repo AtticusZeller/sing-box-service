@@ -61,7 +61,7 @@ def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> N
         service.create_service()
     if update:
         if config.update_config():
-            print("✅ Configuration updated.")
+            pass
         else:
             print("❌ Failed to update configuration.")
             raise typer.Exit(1)
