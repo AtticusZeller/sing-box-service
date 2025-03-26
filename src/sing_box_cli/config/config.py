@@ -23,7 +23,8 @@ class SingBoxConfig:
 
         self.user = user
         bin_filename = "sing-box.exe" if self.is_windows else "sing-box"
-        bin_path = shutil.which(bin_filename)
+        # sing-box-beta for linux beta version
+        bin_path = shutil.which(bin_filename) or shutil.which("sing-box-beta")
         if not bin_path:
             raise FileNotFoundError(f"❌ {bin_filename} not found in PATH")
 
