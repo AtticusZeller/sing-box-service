@@ -43,9 +43,9 @@ class WindowsServiceManager(ServiceManager):
         ps_command = f"""
 $action = New-ScheduledTaskAction `
     -Execute "pwsh.exe" `
-    -Argument "-WindowStyle Hidden -Command `"{self.config.bin_path}`" run -C `"{self.config.config_dir}`""
+    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -Command `"{self.config.bin_path}`" run -C `"{self.config.config_dir}`""
 
-$trigger = New-ScheduledTaskTrigger -AtStartup
+$trigger = New-ScheduledTaskTrigger -AtLogOn
 $principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -Priority 0 -DontStopIfGoingOnBatteries -DontStopOnIdleEnd -RestartCount 10
 
