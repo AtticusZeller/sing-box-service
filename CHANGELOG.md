@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.36 - 2025-03-26
+
+### 🐛 Bug Fixes
+
+- Sing-box-beta bin_path
+
+### 🧪 Testing
+
+- Add pytest tools
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove redundant `check_url()` in config.utils
+- Rename load_json_config as load_json_asdict
+- Order commands in `pre-commit.sh`
+
 ## 0.0.35 - 2025-03-26
 
 ### 🐛 Bug Fixes
