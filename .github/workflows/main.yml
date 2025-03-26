@@ -30,11 +30,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --python ${{ matrix.python-version }} --all-extras --dev
 
-      - name: Run Pre-commit
-        run: uvx pre-commit  run --all-files
-
-      - name: Run linters
-        run: uv run bash scripts/lint.sh
+      - name: Run Code Coverage Tests Pipeline
+        run: uv run bash scripts/pre-commit.sh
 
   release:
     name: Bump Version and Release
