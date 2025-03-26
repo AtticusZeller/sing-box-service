@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.35 - 2025-03-26
+
+### 🐛 Bug Fixes
+
+- Elevate privilege for pwsh and delay the execution of task to user login on
+
 ## 0.0.34 - 2025-03-25
 
 ### 🐛 Bug Fixes
