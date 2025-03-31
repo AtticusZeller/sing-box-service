@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.37 - 2025-03-31
+
+### 🚜 Refactor
+
+- Simplify config class in #5
+- Enable windows powershell as executor
+
+### ⚙️ Miscellaneous Tasks
+
+- Update test script
+- Update pre-commit
+
 ## 0.0.36 - 2025-03-26
 
 ### 🐛 Bug Fixes
