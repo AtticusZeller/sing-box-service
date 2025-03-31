@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from functools import lru_cache
 from pathlib import Path
@@ -39,10 +40,21 @@ class WindowsServiceManager(ServiceManager):
         super().__init__(config)
         self.task_name = "sing-box-service"
 
+    @property
+    def pwsh(self) -> Path:
+        """Get the PowerShell executable path"""
+        # Use the pwsh executable if available, otherwise fall back to windows powershell
+        pwsh_exe = shutil.which("pwsh") or shutil.which("powershell")
+
+        if pwsh_exe:
+            return Path(pwsh_exe).resolve()
+        else:
+            raise OSError("PowerShell is not installed.")
+
     def create_service(self) -> None:
         ps_command = f"""
 $action = New-ScheduledTaskAction `
-    -Execute "pwsh.exe" `
+    -Execute "{self.pwsh}" `
     -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -Command `"{self.config.bin_path}`" run -C `"{self.config.config_dir}`""
 
 $trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -56,24 +68,26 @@ Register-ScheduledTask -TaskName "{self.task_name}" `
     -Settings $settings `
     -Force
 """
-        subprocess.run(["pwsh", "-Command", ps_command], check=True)
+        subprocess.run([self.pwsh, "-Command", ps_command], check=True)
 
     def check_service(self) -> bool:
         ps_command = f"Get-ScheduledTask -TaskName '{self.task_name}' -ErrorAction SilentlyContinue"
-        result = subprocess.run(["pwsh", "-Command", ps_command], capture_output=True)
+        result = subprocess.run(
+            [self.pwsh, "-Command", ps_command], capture_output=True
+        )
         return result.returncode == 0
 
     def start(self) -> None:
         subprocess.run(
-            ["pwsh", "-Command", f"Start-ScheduledTask -TaskName '{self.task_name}'"]
+            [self.pwsh, "-Command", f"Start-ScheduledTask -TaskName '{self.task_name}'"]
         )
 
     def stop(self) -> None:
         subprocess.run(
-            ["pwsh", "-Command", f"Stop-ScheduledTask -TaskName '{self.task_name}'"]
+            [self.pwsh, "-Command", f"Stop-ScheduledTask -TaskName '{self.task_name}'"]
         )
         ps_command = "Get-Process | Where-Object { $_.ProcessName -eq 'sing-box' } | Stop-Process -Force"
-        subprocess.run(["pwsh", "-Command", ps_command])
+        subprocess.run([self.pwsh, "-Command", ps_command])
 
     def restart(self) -> None:
         self.stop()
@@ -94,7 +108,7 @@ if ($task) {{
 }}
 """
         result = subprocess.run(
-            ["pwsh", "-Command", ps_command], capture_output=True, text=True
+            [self.pwsh, "-Command", ps_command], capture_output=True, text=True
         )
         return result.stdout.strip()
 
@@ -102,7 +116,7 @@ if ($task) {{
         self.stop()
         subprocess.run(
             [
-                "pwsh",
+                self.pwsh,
                 "-Command",
                 f"Unregister-ScheduledTask -TaskName '{self.task_name}' -Confirm:$false",
             ]
