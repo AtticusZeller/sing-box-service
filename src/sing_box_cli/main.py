@@ -28,13 +28,19 @@ def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
     """Run sing-box if host's service unavailable"""
     ensure_root()
     cfg = get_context_obj(ctx).config
+
     if update:
         if cfg.update_config():
             pass
         else:
             print("❌ Failed to update configuration.")
-            raise typer.Exit(1)
 
+    # stop if empty
+    if cfg.config_file_content == "{}":
+        print("❌ Configuration file is empty.")
+        raise typer.Exit(1)
+
+    # run
     cmd = [
         str(cfg.bin_path),
         "run",
