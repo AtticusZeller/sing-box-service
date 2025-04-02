@@ -91,8 +91,6 @@ Register-ScheduledTask -TaskName "{self.task_name}" `
         subprocess.run(
             [self.pwsh, "-Command", f"Stop-ScheduledTask -TaskName '{self.task_name}'"]
         )
-        ps_command = "Get-Process | Where-Object { $_.ProcessName -eq 'sing-box' } | Stop-Process -Force"
-        subprocess.run([self.pwsh, "-Command", ps_command])
 
     def restart(self) -> None:
         self.stop()
