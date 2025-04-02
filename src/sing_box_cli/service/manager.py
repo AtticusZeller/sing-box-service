@@ -10,6 +10,11 @@ class ServiceManager:
     def __init__(self, config: SingBoxConfig) -> None:
         self.config = config
 
+    @property
+    def run_cmd(self) -> str:
+        """Get the run command for the service"""
+        return f"{self.config.bin_path} run -C {self.config.config_dir} -D {self.config.config_dir}"
+
     def create_service(self) -> None:
         raise NotImplementedError()
 
@@ -55,7 +60,7 @@ class WindowsServiceManager(ServiceManager):
         ps_command = f"""
 $action = New-ScheduledTaskAction `
     -Execute "{self.pwsh}" `
-    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -Command `"{self.config.bin_path}`" run -C `"{self.config.config_dir}`""
+    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -Command `"{self.run_cmd}`""
 
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 $principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
@@ -155,7 +160,7 @@ AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME 
 Restart=always
 RestartSec=2
 # start commands
-ExecStart={self.config.bin_path} run -C {self.config.config_dir} -D {self.config.config_dir}
+ExecStart={self.run_cmd}
 ExecReload=/bin/kill -HUP $MAINPID
 # IO
 IOSchedulingPriority=0
