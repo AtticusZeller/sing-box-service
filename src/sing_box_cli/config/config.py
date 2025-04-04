@@ -66,12 +66,11 @@ class SingBoxConfig:
 
     @property
     def bin_path(self) -> Path:
-        """Get the path to the sing-box binary."""
-        bin_filename = "sing-box.exe" if self.is_windows else "sing-box"
+        """Get the path of the sing-box binary."""
         # sing-box-beta for linux beta version
-        bin_path = shutil.which(bin_filename) or shutil.which("sing-box-beta")
+        bin_path = shutil.which("sing-box") or shutil.which("sing-box-beta")
         if not bin_path:
-            raise FileNotFoundError(f"❌ {bin_filename} not found in PATH")
+            raise FileNotFoundError("❌ sing-box or sing-box-beta not found in PATH")
         return Path(bin_path).absolute()
 
     @property
