@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import cast
 
 import typer
@@ -20,7 +19,6 @@ class SharedContext:
     service: WindowsServiceManager | LinuxServiceManager
 
 
-@lru_cache
 def get_context_obj(ctx: typer.Context) -> SharedContext:
     return cast(SharedContext, ctx.obj)
 

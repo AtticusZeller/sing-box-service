@@ -1,6 +1,5 @@
 import shutil
 import subprocess
-from functools import lru_cache
 from pathlib import Path
 
 from ..config.config import SingBoxConfig
@@ -205,7 +204,6 @@ WantedBy=multi-user.target
         return result.stdout.decode("utf-8").strip()
 
 
-@lru_cache
 def create_service(
     config: SingBoxConfig,
 ) -> WindowsServiceManager | LinuxServiceManager:

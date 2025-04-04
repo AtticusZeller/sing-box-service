@@ -1,5 +1,4 @@
 import asyncio
-from functools import lru_cache
 from typing import Annotated
 
 import typer
@@ -43,7 +42,6 @@ LogLevelOption = Annotated[
 api = typer.Typer(help="sing-box manager.")
 
 
-@lru_cache
 def create_client(
     config: SingBoxConfig, base_url: StrOrNone = None, token: StrOrNone = None
 ) -> SingBoxAPIClient:

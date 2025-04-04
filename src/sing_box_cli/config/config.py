@@ -1,7 +1,6 @@
 import os
 import platform
 import shutil
-from functools import lru_cache
 from pathlib import Path
 
 import typer
@@ -239,7 +238,6 @@ class SingBoxConfig:
         return info
 
 
-@lru_cache
 def get_config() -> SingBoxConfig:
     """Get a cached SingBoxConfig instance."""
     config = SingBoxConfig()
