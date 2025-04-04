@@ -1,0 +1,243 @@
+{
+  "log": {
+    "level": "debug",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "hosts",
+        "type": "hosts",
+        "predefined": {
+          "dns.example.com": "192.168.100.101",
+          "magic.example.com": "192.168.100.101"
+        }
+      },
+      {
+        "tag": "dns_direct",
+        "type": "h3",
+        "server": "223.5.5.5",
+        "path": "/dns-query",
+        "detour": "direct"
+      },
+      {
+        "tag": "dns_proxy",
+        "type": "h3",
+        "server": "dns.example.com",
+        "path": "/dns-query/randomstring123",
+        "domain_resolver": {
+          "server": "hosts",
+          "rewrite_ttl": 60
+        },
+        "detour": "proxy"
+      },
+      {
+        "tag": "dns_fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      }
+    ],
+    "rules": [
+      {
+        "rule_set": "proxy-rule",
+        "server": "dns_proxy"
+      },
+      {
+        "rule_set": "direct-rule",
+        "client_subnet": "192.168.1.0/24",
+        "server": "dns_direct"
+      }
+    ],
+    "final": "dns_proxy",
+    "reverse_mapping": true,
+    "cache_capacity": 4096,
+    "strategy": "prefer_ipv4",
+    "client_subnet": "192.168.0.0/16",
+    "independent_cache": true
+  },
+  "ntp": {
+    "enabled": true,
+    "interval": "30m0s",
+    "server": "time.cloudflare.com",
+    "write_to_system": true,
+    "server_port": 123,
+    "detour": "direct"
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "mtu": 1492,
+      "address": [
+        "172.16.0.1/30",
+        "fd00::1/126"
+      ],
+      "auto_route": true,
+      "strict_route": true,
+      "auto_redirect": true,
+      "route_exclude_address_set": "geoip-cn",
+      "stack": "mixed"
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "selector",
+      "tag": "proxy",
+      "outbounds": [
+        "⚡ Hysteria2-direct",
+        "⚙️ Vless-cf-worker",
+        "🌩️ Vless-cf-proxy",
+        "direct"
+      ],
+      "default": "⚡ Hysteria2-direct"
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "vless",
+      "tag": "🌩️ Vless-cf-proxy",
+      "tcp_fast_open": true,
+      "tcp_multi_path": true,
+      "udp_fragment": true,
+      "server": "104.19.100.200",
+      "server_port": 2053,
+      "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "tls": {
+        "enabled": true,
+        "server_name": "cdn.example.com",
+        "min_version": "1.3",
+        "alpn": "h3"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/ws",
+        "max_early_data": 2048,
+        "headers": {
+          "Host": "cdn.example.com"
+        }
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "⚙️ Vless-cf-worker",
+      "server": "104.24.100.200",
+      "server_port": 443,
+      "uuid": "11111111-2222-3333-4444-555555555555",
+      "tls": {
+        "enabled": true,
+        "server_name": "worker.magic.example.com"
+      },
+      "transport": {
+        "type": "ws",
+        "path": "/?ed=2560",
+        "headers": {
+          "Host": "worker.magic.example.com"
+        }
+      }
+    },
+    {
+      "type": "hysteria2",
+      "tag": "⚡ Hysteria2-direct",
+      "tcp_fast_open": true,
+      "tcp_multi_path": true,
+      "udp_fragment": true,
+      "server": "magic.example.com",
+      "server_ports": [
+        "40000:60000"
+      ],
+      "domain_resolver": {
+        "server": "hosts",
+        "rewrite_ttl": 60
+      },
+      "hop_interval": "1800s",
+      "up_mbps": 150,
+      "down_mbps": 400,
+      "password": "RandomizedPassword123=",
+      "tls": {
+        "enabled": true,
+        "server_name": "magic.example.com",
+        "min_version": "1.3",
+        "alpn": "h3"
+      }
+    }
+  ],
+  "route": {
+    "default_domain_resolver": {
+      "server": "dns_direct",
+      "rewrite_ttl": 60,
+      "client_subnet": "1.1.1.1"
+    },
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "proxy-rule",
+        "outbound": "proxy"
+      },
+      {
+        "protocol": "ssh",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "direct-rule",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "geoip-cn",
+        "outbound": "direct"
+      }
+    ],
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "proxy-rule",
+        "format": "binary",
+        "url": "https://example.com/path/to/proxy.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "direct-rule",
+        "format": "binary",
+        "url": "https://example.com/path/to/direct.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geoip-cn",
+        "format": "binary",
+        "url": "https://example.com/path/to/geoip-cn.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      }
+    ],
+    "final": "proxy",
+    "auto_detect_interface": true
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "path": "cache.db",
+      "store_fakeip": true,
+      "store_rdrc": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "default_mode": "Rule"
+    }
+  }
+}
