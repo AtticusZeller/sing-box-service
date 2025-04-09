@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.39 - 2025-04-09
+
+### 🐛 Bug Fixes
+
+- Go build version in ci
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.11.7
+
 ## 0.0.38 - 2025-04-09
 
 ### 🚀 Features
@@ -10,12 +20,12 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- Run_cmd of service and early stop in run (#7)
+- Run_cmd of service and early stop in run (#7) in #7
 - No known parent package
 
 ### ⚙️ Miscellaneous Tasks
 
-- Remove redundant stop process ps_cmd
+- Remove redundant stop process ps_cmd in #8
 - Remove redundant if condition for Config.bin_path
 - Remove lru_cache
 - Update sing-box binary to version v1.11.7
