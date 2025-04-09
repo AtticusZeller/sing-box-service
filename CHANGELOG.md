@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.38 - 2025-04-09
+
+### 🚀 Features
+
+- Add fallback sing-box bins
+
+### 🐛 Bug Fixes
+
+- Run_cmd of service and early stop in run (#7)
+- No known parent package
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove redundant stop process ps_cmd
+- Remove redundant if condition for Config.bin_path
+- Remove lru_cache
+- Update sing-box binary to version v1.11.7
+
 ## 0.0.37 - 2025-03-31
 
 ### 🚜 Refactor
