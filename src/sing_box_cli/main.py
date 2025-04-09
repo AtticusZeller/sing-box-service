@@ -3,12 +3,12 @@ import subprocess
 import typer
 from rich import print
 
-from .api import api as api_app
-from .common import UpdateConfigOption, ensure_root
-from .config import config as config_app
-from .config.config import get_config
-from .service import SharedContext, get_context_obj, service as service_app
-from .service.manager import create_service
+from sing_box_cli.api import api as api_app
+from sing_box_cli.common import UpdateConfigOption, ensure_root
+from sing_box_cli.config import config as config_app
+from sing_box_cli.config.config import get_config
+from sing_box_cli.service import SharedContext, get_context_obj, service as service_app
+from sing_box_cli.service.manager import create_service
 
 app = typer.Typer(help="sing-box manager.")
 app.add_typer(api_app)
@@ -55,7 +55,7 @@ def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
 @app.command()
 def version(ctx: typer.Context) -> None:
     """Show version"""
-    from . import __version__
+    from sing_box_cli import __version__
 
     print(f"🔖 sing-box-cli {__version__}")
     print(f"📦 {get_context_obj(ctx).service.version()}")
