@@ -4,7 +4,6 @@
 set -e
 set -x
 
-
 # Get the latest tag
 # LATEST_TAG=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r .tag_name)
 LATEST_TAG=$1
