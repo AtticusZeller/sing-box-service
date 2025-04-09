@@ -1,0 +1,67 @@
+name: Build sing-box
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check_version.outputs.EXISTS == 'false' }}
+      version: ${{ steps.check_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check latest version
+        id: check_version
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r .tag_name)
+          echo "LATEST_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+          if git ls-remote --tags origin | grep -q $LATEST_VERSION; then
+            echo "EXISTS=true" >> $GITHUB_OUTPUT
+          else
+            echo "EXISTS=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev jq
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.24.1'
+      - run: go version
+
+      - name: Get sing-box version
+        id: get_version
+        run: |
+          VERSION=${{ needs.check.outputs.version }}
+          echo "sing_box_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build sing-box
+        run: |
+          chmod +x scripts/build.sh
+          sudo ./scripts/build.sh ${{ env.sing_box_VERSION }}
+
+      - name: Commit New bin Files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/sing_box_cli/bin/
+          git commit -m "chore: update sing-box binary to version ${{ needs.check.outputs.version }}"
+          git push
