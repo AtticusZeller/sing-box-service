@@ -40,89 +40,153 @@ class ServiceManager:
 
 
 class WindowsServiceManager(ServiceManager):
+    """
+    commands: https://nssm.cc/commands
+    binary: https://nssm.cc/builds
+    """
+
     def __init__(self, config: SingBoxConfig) -> None:
         super().__init__(config)
-        self.task_name = "sing-box-service"
+        self.service_name = "sing-box-service"
+        self.status_list = ["SERVICE_RUNNING", "SERVICE_STOPPED"]
 
     @property
-    def pwsh(self) -> Path:
-        """Get the PowerShell executable path"""
-        # Use the pwsh executable if available, otherwise fall back to windows powershell
-        pwsh_exe = shutil.which("pwsh") or shutil.which("powershell")
-
-        if pwsh_exe:
-            return Path(pwsh_exe).resolve()
-        else:
-            raise OSError("PowerShell is not installed.")
+    def nssm_bin(self) -> str:
+        """Get the NSSM executable path"""
+        nssm_exe: Path | str | None = shutil.which("nssm")
+        if nssm_exe is None:
+            bin_dir = Path(__file__).parents[1] / "bin"
+            nssm_exe = bin_dir / "nssm.exe"
+        return str(nssm_exe)
 
     def create_service(self) -> None:
-        ps_command = f"""
-$action = New-ScheduledTaskAction `
-    -Execute "{self.pwsh}" `
-    -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -Command `"{self.run_cmd}`""
+        """Create a Windows service using NSSM"""
+        # Install the service
+        try:
+            subprocess.run(
+                [
+                    self.nssm_bin,
+                    "install",
+                    self.service_name,
+                    *self.run_cmd.split(" "),
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            # Service might already exist, which is fine for a create
+            pass
 
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-$principal = New-ScheduledTaskPrincipal -UserId "{self.config.user}" -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -Priority 0 -DontStopIfGoingOnBatteries -DontStopOnIdleEnd -RestartCount 10
-
-Register-ScheduledTask -TaskName "{self.task_name}" `
-    -Action $action `
-    -Trigger $trigger `
-    -Principal $principal `
-    -Settings $settings `
-    -Force
-"""
-        subprocess.run([self.pwsh, "-Command", ps_command], check=True)
-
-    def check_service(self) -> bool:
-        ps_command = f"Get-ScheduledTask -TaskName '{self.task_name}' -ErrorAction SilentlyContinue"
-        result = subprocess.run(
-            [self.pwsh, "-Command", ps_command], capture_output=True
-        )
-        return result.returncode == 0
-
-    def start(self) -> None:
+        # Automatic startup at boot.
         subprocess.run(
-            [self.pwsh, "-Command", f"Start-ScheduledTask -TaskName '{self.task_name}'"]
+            [self.nssm_bin, "set", self.service_name, "Start", "SERVICE_AUTO_START"],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
 
-    def stop(self) -> None:
+        # Configure service recovery options
         subprocess.run(
-            [self.pwsh, "-Command", f"Stop-ScheduledTask -TaskName '{self.task_name}'"]
+            [self.nssm_bin, "set", self.service_name, "AppExit", "Default", "Restart"],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
 
-    def restart(self) -> None:
-        self.stop()
-        self.start()
-
-    def status(self) -> str:
-        ps_command = f"""
-$task = Get-ScheduledTask -TaskName '{self.task_name}' -ErrorAction SilentlyContinue
-if ($task) {{
-    $process = Get-Process | Where-Object {{ $_.Path -eq '{self.config.bin_path}' }}
-    if ($process) {{
-        "Running (PID: $($process.Id))"
-    }} else {{
-        "Stopped"
-    }}
-}} else {{
-    "Not installed"
-}}
-"""
-        result = subprocess.run(
-            [self.pwsh, "-Command", ps_command], capture_output=True, text=True
+        subprocess.run(
+            [self.nssm_bin, "set", self.service_name, "AppRestartDelay", "2000"],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
-        return result.stdout.strip()
 
-    def disable(self) -> None:
-        self.stop()
+        # Process priority and CPU affinity
         subprocess.run(
             [
-                self.pwsh,
-                "-Command",
-                f"Unregister-ScheduledTask -TaskName '{self.task_name}' -Confirm:$false",
-            ]
+                self.nssm_bin,
+                "set",
+                self.service_name,
+                "AppPriority",
+                "HIGH_PRIORITY_CLASS",
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
+
+        # A standalone service. This is the default.
+        subprocess.run(
+            [
+                self.nssm_bin,
+                "set",
+                self.service_name,
+                "Type",
+                "SERVICE_WIN32_OWN_PROCESS",
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+
+    def check_service(self) -> bool:
+        """Check if the service exists"""
+        result = subprocess.run(
+            [self.nssm_bin, "status", self.service_name],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip() in self.status_list
+
+    def start(self) -> None:
+        """Start the service"""
+        try:
+            subprocess.run(
+                [self.nssm_bin, "start", self.service_name],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            pass
+
+    def stop(self) -> None:
+        """Stop the service"""
+        try:
+            subprocess.run(
+                [self.nssm_bin, "stop", self.service_name],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            # Service might not be running, which is fine for a stop
+            pass
+
+    def restart(self) -> None:
+        """Restart the service"""
+        subprocess.run(
+            [self.nssm_bin, "restart", self.service_name],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+
+    def status(self) -> str:
+        """Get the service status"""
+        result = subprocess.run(
+            [self.nssm_bin, "status", self.service_name],
+            capture_output=True,
+            text=True,
+        )
+        return (
+            result.stdout.replace("_", " ").title().strip()
+            if result.stdout
+            else "Service not installed"
+        )
+
+    def disable(self) -> None:
+        """Remove the service"""
+        try:
+            subprocess.run(
+                [self.nssm_bin, "remove", self.service_name, "confirm"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            # Service might not exist, which is fine for a disable
+            pass
 
     def version(self) -> str:
         result = subprocess.run([self.config.bin_path, "version"], capture_output=True)
