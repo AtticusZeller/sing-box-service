@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.43 - 2025-05-06
+
+### 🚀 Features
+
+- Add `--clear-cache` ,`-cc` option for `run`, `service restart`
+
+### 🐛 Bug Fixes
+
+- Avoid debug output
+
+### 🚜 Refactor
+
+- Rename `clean_cache` to `clear_cache`
+
+### ⚙️ Miscellaneous Tasks
+
+- *(github-actions)* Bump astral-sh/setup-uv from 5 to 6 (#12) in #12
+- Update sing-box binary to version v1.11.10
+- Format
+
 ## 0.0.42 - 2025-04-28
 
 ### ⚙️ Miscellaneous Tasks
