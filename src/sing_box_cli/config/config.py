@@ -21,6 +21,7 @@ class SingBoxConfig:
         self._config_file = self._config_dir / "config.json"
         self._subscription_file = self._config_dir / "subscription.txt"
         self._token_file = self._config_dir / "token.txt"
+        # TODO: fetch cache.db path from config file
         self._cache_db = self._config_dir / "cache.db"
 
         print(self)
@@ -220,10 +221,10 @@ class SingBoxConfig:
         else:
             print("❌ No subscription URL found.")
 
-    def clean_cache(self) -> None:
+    def clear_cache(self) -> None:
         """Remove the cache database file."""
         try:
-            self.cache_db.unlink()
+            self.cache_db.unlink(missing_ok=False)
             print("🗑️ Cache database removed.")
         except FileNotFoundError:
             print("❌ Cache database not found.")

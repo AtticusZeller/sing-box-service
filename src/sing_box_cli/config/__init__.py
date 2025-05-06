@@ -60,8 +60,8 @@ def config_show(ctx: typer.Context) -> None:
     print(ctx_obj.config.config_file_content)
 
 
-@config.command("clean_cache")
-def config_clean_cache(ctx: typer.Context) -> None:
+@config.command("clear_cache")
+def config_clear_cache(ctx: typer.Context) -> None:
     """Clean cache database"""
     ctx_obj = get_context_obj(ctx)
-    ctx_obj.config.clean_cache()
+    ctx_obj.config.clear_cache()
