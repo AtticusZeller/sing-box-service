@@ -143,6 +143,7 @@ class WindowsServiceManager(ServiceManager):
                 [self.nssm_bin, "stop", self.service_name],
                 check=True,
                 stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
         except subprocess.CalledProcessError:
             # Service might not be running, which is fine for a stop
@@ -154,6 +155,7 @@ class WindowsServiceManager(ServiceManager):
             [self.nssm_bin, "restart", self.service_name],
             check=True,
             stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
 
     def status(self) -> str:
