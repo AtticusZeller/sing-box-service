@@ -64,12 +64,7 @@ class WindowsServiceManager(ServiceManager):
         # Install the service
         try:
             subprocess.run(
-                [
-                    self.nssm_bin,
-                    "install",
-                    self.service_name,
-                    *self.run_cmd.split(" "),
-                ],
+                [self.nssm_bin, "install", self.service_name, *self.run_cmd.split(" ")],
                 check=True,
                 stdout=subprocess.DEVNULL,
             )
@@ -126,9 +121,7 @@ class WindowsServiceManager(ServiceManager):
     def check_service(self) -> bool:
         """Check if the service exists"""
         result = subprocess.run(
-            [self.nssm_bin, "status", self.service_name],
-            capture_output=True,
-            text=True,
+            [self.nssm_bin, "status", self.service_name], capture_output=True, text=True
         )
         return result.stdout.strip() in self.status_list
 
@@ -166,9 +159,7 @@ class WindowsServiceManager(ServiceManager):
     def status(self) -> str:
         """Get the service status"""
         result = subprocess.run(
-            [self.nssm_bin, "status", self.service_name],
-            capture_output=True,
-            text=True,
+            [self.nssm_bin, "status", self.service_name], capture_output=True, text=True
         )
         return (
             result.stdout.replace("_", " ").title().strip()
