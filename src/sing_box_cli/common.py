@@ -8,6 +8,9 @@ StrOrNone = str | None
 UpdateConfigOption = Annotated[
     bool, typer.Option("--update", "-u", help="Update configuration before running.")
 ]
+ClearCacheOption = Annotated[
+    bool, typer.Option("--clear-cache", "-cc", help="Clear cache.db before running.")
+]
 
 
 class LogLevel(str, Enum):

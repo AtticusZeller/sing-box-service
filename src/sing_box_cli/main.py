@@ -4,7 +4,7 @@ import typer
 from rich import print
 
 from sing_box_cli.api import api as api_app
-from sing_box_cli.common import UpdateConfigOption, ensure_root
+from sing_box_cli.common import ClearCacheOption, UpdateConfigOption, ensure_root
 from sing_box_cli.config import config as config_app
 from sing_box_cli.config.config import get_config
 from sing_box_cli.service import SharedContext, get_context_obj, service as service_app
@@ -24,8 +24,12 @@ def callback(ctx: typer.Context) -> None:
 
 
 @app.command()
-def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
-    """Run sing-box if host's service unavailable"""
+def run(
+    ctx: typer.Context,
+    update: UpdateConfigOption = False,
+    purge: ClearCacheOption = False,
+) -> None:
+    """Run sing-box if host's service unavailable or debug mode."""
     ensure_root()
     cfg = get_context_obj(ctx).config
 
@@ -34,6 +38,8 @@ def run(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
             pass
         else:
             print("❌ Failed to update configuration.")
+    if purge:
+        cfg.clear_cache()
 
     # stop if empty
     if cfg.config_file_content == "{}":

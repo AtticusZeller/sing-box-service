@@ -3,7 +3,7 @@ from typing import cast
 
 import typer
 
-from ..common import UpdateConfigOption, ensure_root
+from ..common import ClearCacheOption, UpdateConfigOption, ensure_root
 from ..config.config import SingBoxConfig
 from .manager import LinuxServiceManager, WindowsServiceManager
 
@@ -49,7 +49,11 @@ def service_disable(ctx: typer.Context) -> None:
 
 
 @service.command("restart")
-def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> None:
+def service_restart(
+    ctx: typer.Context,
+    update: UpdateConfigOption = False,
+    purge: ClearCacheOption = False,
+) -> None:
     """Restart sing-box service, update configuration if needed, create service if not exists"""
     ensure_root()
     ctx_obj = get_context_obj(ctx)
@@ -63,8 +67,10 @@ def service_restart(ctx: typer.Context, update: UpdateConfigOption = False) -> N
         else:
             print("❌ Failed to update configuration.")
             raise typer.Exit(1)
-
-    service.restart()
+    service.stop()
+    if purge:
+        config.clear_cache()
+    service.start()
     print("🔥 Service restarted.")
     if config.api_base_url:
         print(f"🔌 Default API: {config.api_base_url}")
