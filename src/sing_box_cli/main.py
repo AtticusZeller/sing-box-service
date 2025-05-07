@@ -6,7 +6,7 @@ from rich import print
 from sing_box_cli.api import api as api_app
 from sing_box_cli.common import ClearCacheOption, UpdateConfigOption, ensure_root
 from sing_box_cli.config import config as config_app
-from sing_box_cli.config.config import get_config
+from sing_box_cli.config.config import get_config, run_cmd
 from sing_box_cli.service import SharedContext, get_context_obj, service as service_app
 from sing_box_cli.service.manager import create_service
 
@@ -47,14 +47,7 @@ def run(
         raise typer.Exit(1)
 
     # run
-    cmd = [
-        str(cfg.bin_path),
-        "run",
-        "-C",
-        str(cfg.config_dir),
-        "-D",
-        str(cfg.config_dir),
-    ]
+    cmd = run_cmd(cfg).split()
     subprocess.run(cmd)
 
 

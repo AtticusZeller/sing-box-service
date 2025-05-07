@@ -253,3 +253,7 @@ def get_config() -> ConfigHandler:
     if not config.init_directories():
         raise FileNotFoundError("❌ Failed to initialize directories")
     return config
+
+
+def run_cmd(config: ConfigHandler) -> str:
+    return f"{config.bin_path} run -c {config.config_file} -D {config.config_dir}"
