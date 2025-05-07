@@ -1,4 +1,5 @@
 import json
+from difflib import unified_diff
 from pathlib import Path
 from typing import Any
 
@@ -8,7 +9,6 @@ from rich import print
 
 def show_diff_config(current_config: str, new_config: str) -> None:
     print("📄 Configuration differences:")
-    from difflib import unified_diff
 
     diff = list(
         unified_diff(
@@ -21,14 +21,14 @@ def show_diff_config(current_config: str, new_config: str) -> None:
     )
 
     for line in diff:
-        if line.startswith("+"):
+        if line.startswith(("---", "+++")):
+            print(f"[dim]{line}[/dim]")
+        elif line.startswith("+"):
             print(f"[green]{line}[/green]")
         elif line.startswith("-"):
             print(f"[red]{line}[/red]")
         elif line.startswith("@@"):
             print(f"[blue]{line}[/blue]")
-        elif line.startswith(("---", "+++")):
-            print(f"[dim]{line}[/dim]")
         else:
             print(f"[white]{line}[/white]")
 
