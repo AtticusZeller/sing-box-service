@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.44 - 2025-05-07
+
+### 🐛 Bug Fixes
+
+- Specify one config file and unify sing-box run cmd
+- Add SERVICE_PAUSED into nssm service status list
+- Py 3.11 is needed for `Self` typing annotation at least
+
+### 🚜 Refactor
+
+- Split config into sing-box config and app config
+
+### ⚙️ Miscellaneous Tasks
+
+- Rename SingBoxConfig as  ConfigHandler
+- Remove redundant code
+- Format in #14
+
 ## 0.0.43 - 2025-05-06
 
 ### 🚀 Features
