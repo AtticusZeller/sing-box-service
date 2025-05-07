@@ -43,7 +43,7 @@ class WindowsServiceManager(ServiceManager):
     def __init__(self, config: ConfigHandler) -> None:
         super().__init__(config)
         self.service_name = "sing-box-service"
-        self.status_list = ["SERVICE_RUNNING", "SERVICE_STOPPED"]
+        self.status_list = ["SERVICE_RUNNING", "SERVICE_STOPPED", "SERVICE_PAUSED"]
 
     @property
     def nssm_bin(self) -> str:
