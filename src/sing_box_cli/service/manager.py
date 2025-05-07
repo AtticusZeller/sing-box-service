@@ -2,17 +2,12 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from ..config.config import ConfigHandler
+from ..config.config import ConfigHandler, run_cmd
 
 
 class ServiceManager:
     def __init__(self, config: ConfigHandler) -> None:
         self.config = config
-
-    @property
-    def run_cmd(self) -> str:
-        """Get the run command for the service"""
-        return f"{self.config.bin_path} run -C {self.config.config_dir} -D {self.config.config_dir}"
 
     def create_service(self) -> None:
         raise NotImplementedError()
@@ -64,7 +59,12 @@ class WindowsServiceManager(ServiceManager):
         # Install the service
         try:
             subprocess.run(
-                [self.nssm_bin, "install", self.service_name, *self.run_cmd.split(" ")],
+                [
+                    self.nssm_bin,
+                    "install",
+                    self.service_name,
+                    *run_cmd(self.config).split(),
+                ],
                 check=True,
                 stdout=subprocess.DEVNULL,
             )
@@ -214,7 +214,7 @@ AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME 
 Restart=always
 RestartSec=2
 # start commands
-ExecStart={self.run_cmd}
+ExecStart={run_cmd(self.config)}
 ExecReload=/bin/kill -HUP $MAINPID
 # IO
 IOSchedulingPriority=0
