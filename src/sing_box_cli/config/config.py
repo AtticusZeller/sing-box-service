@@ -1,56 +1,118 @@
+import json
 import os
 import platform
 import shutil
 from pathlib import Path
+from typing import Self
 
 import typer
+from pydantic import BaseModel, ConfigDict, Field
 from rich import print
 
 from ..common import StrOrNone
-from .utils import load_json_asdict, request_get, show_diff_config
+from .utils import request_get, show_diff_config
+
+
+class ClashApiConfig(BaseModel):
+    """Clash API configuration settings."""
+
+    external_controller: str = Field(default="127.0.0.1:9090")
+    default_mode: str = Field(default="Rule")
+    secret: str = Field(default="")
+
+
+class CacheFileConfig(BaseModel):
+    """Cache file configuration settings."""
+
+    enabled: bool = Field(default=True)
+    path: str = Field(default="cache.db")
+
+
+class ExperimentalConfig(BaseModel):
+    """Experimental features configuration."""
+
+    cache_file: CacheFileConfig | None = Field(default=None)
+    clash_api: ClashApiConfig | None = Field(default=None)
+
+
+class ConfigModel(BaseModel):
+    """Load and save configuration files."""
+
+    @classmethod
+    def load(cls, config_path: Path) -> Self:
+        """Load configuration from file or create with defaults if not exists."""
+        if config_path.exists():
+            try:
+                return cls.model_validate(
+                    json.loads(config_path.read_text(encoding="utf-8"))
+                )
+            except Exception as e:
+                print(f"⚠️ Error loading app config, using defaults: {e}")
+                return cls()
+        return cls()
+
+    def save(self, config_path: Path) -> None:
+        """Save configuration to file."""
+        config_path.write_text(self.model_dump_json(indent=2), encoding="utf-8")
+
+
+class SingBoxConfig(ConfigModel):
+    """Model representing the sing-box configuration file structure."""
+
+    # We only model the parts we interact with directly
+    experimental: ExperimentalConfig | None = Field(default=None)
+
+    # Other fields will be preserved but not explicitly modeled
+    model_config = ConfigDict(extra="allow")
+
+
+class SingBoxAppConfig(ConfigModel):
+    """Application-specific configuration for sing-box-cli."""
+
+    subscription_url: str = Field(default="", description="Subscription URL")
+    token: str = Field(default="", description="Authentication token")
 
 
 class ConfigHandler:
     def __init__(self) -> None:
-        # Initialize config directories and files based on properties
         self._config_dir = (
             Path(typer.get_app_dir("sing-box", roaming=True))
             if self.is_windows
             else Path(f"~{self.user}/.config/sing-box").expanduser()
         )
+        # Configs file path
         self._config_file = self._config_dir / "config.json"
-        self._subscription_file = self._config_dir / "subscription.txt"
-        self._token_file = self._config_dir / "token.txt"
-        # TODO: fetch cache.db path from config file
-        self._cache_db = self._config_dir / "cache.db"
+        self._app_config_file = self._config_dir / "app_config.json"
 
+        # Load both configurations
+        self._sing_box_config = SingBoxConfig.load(self._config_file)
+        self._app_config = SingBoxAppConfig.load(self._app_config_file)
         print(self)
 
     def init_directories(self) -> bool:
         """Initialize necessary directories and files for sing-box."""
         try:
             self.config_dir.mkdir(parents=True, exist_ok=True)
-            # Create files if they don't exist
-            for file_info in [
-                (self.config_file, "{}", "config"),
-                (self.subscription_file, "", "subscription"),
-                (self.token_file, "", "token"),
-            ]:
-                file, content, name = file_info
-                if not file.exists():
-                    file.write_text(content)
-                    print(f"📁 Created {name} file: {file}")
-                # For Linux/Unix systems only - Windows will ignore this
-                if not self.is_windows:
-                    shutil.chown(file, user=self.user, group=self.user)
 
-            # For Linux/Unix systems only - Windows will ignore this
+            # Create/save default configs if needed
+            if not self._config_file.exists():
+                self._sing_box_config.save(self._config_file)
+                print(f"📁 Created config file: {self._config_file}")
+
+            if not self._app_config_file.exists():
+                self._app_config.save(self._app_config_file)
+                print(f"📁 Created application config file: {self._app_config_file}")
+
+            # For Linux/Unix systems only - set proper ownership
             if not self.is_windows:
+                for file in [self._config_file, self._app_config_file]:
+                    if file.exists():
+                        shutil.chown(file, user=self.user, group=self.user)
                 shutil.chown(self.config_dir, user=self.user, group=self.user)
+            return True
         except Exception as e:
             print(f"❌ Failed to initialize directories: {e}")
             return False
-        return True
 
     @property
     def user(self) -> str:
@@ -92,86 +154,93 @@ class ConfigHandler:
         return self._config_dir.absolute()
 
     @property
-    def config_file(self) -> Path:
-        """Get the configuration file path."""
-        return self._config_file
-
-    @property
-    def subscription_file(self) -> Path:
-        """Get the subscription file path."""
-        return self._subscription_file
-
-    @property
-    def token_file(self) -> Path:
-        """Get the token file path."""
-        return self._token_file
-
-    @property
     def cache_db(self) -> Path:
-        """Get the cache database path."""
-        return self._cache_db
+        """Get the cache database path, parsed from config if available."""
+        if (
+            self._sing_box_config.experimental
+            and self._sing_box_config.experimental.cache_file
+            and self._sing_box_config.experimental.cache_file.path
+        ):
+            cache_path = self._sing_box_config.experimental.cache_file.path
+            # If it's a relative path, make it relative to config dir
+            if not Path(cache_path).is_absolute():
+                return self._config_dir / cache_path
+            return Path(cache_path)
 
-    @property
-    def sub_url(self) -> str:
-        """Get the subscription URL from the subscription file."""
-        if not self.subscription_file.exists():
-            return ""
-        return self.subscription_file.read_text().strip()
-
-    @sub_url.setter
-    def sub_url(self, value: str) -> None:
-        """Set the subscription URL in the subscription file."""
-        self.subscription_file.write_text(value.strip())
-        print("📁 Subscription updated successfully.")
+        # Default fallback
+        return self._config_dir / "cache.db"
 
     @property
     def api_base_url(self) -> str:
         """Get the API base URL from the configuration file."""
-        config = load_json_asdict(self.config_file)
-        url = (
-            config.get("experimental", {})
-            .get("clash_api", {})
-            .get("external_controller", "")
-        )
-        if isinstance(url, str) and url:
-            if not url.startswith("http"):
-                url = f"http://{url}"
+        if (
+            self._sing_box_config.experimental
+            and self._sing_box_config.experimental.clash_api
+            and self._sing_box_config.experimental.clash_api.external_controller
+        ):
+            url = self._sing_box_config.experimental.clash_api.external_controller
+            if url and not url.startswith("http"):
+                return f"http://{url}"
             return url
         return ""
 
     @property
     def api_secret(self) -> str:
         """Get the API secret from the configuration file."""
-        config = load_json_asdict(self.config_file)
-        token = config.get("experimental", {}).get("clash_api", {}).get("secret", "")
-        if isinstance(token, str) and token:
-            return token
+        if (
+            self._sing_box_config.experimental
+            and self._sing_box_config.experimental.clash_api
+            and self._sing_box_config.experimental.clash_api.secret
+        ):
+            return self._sing_box_config.experimental.clash_api.secret
         return ""
+
+    @property
+    def config_file(self) -> Path:
+        """Get the path of the configuration file."""
+        return self._config_file
 
     @property
     def config_file_content(self) -> str:
         """Get the content of the configuration file."""
         return (
-            self.config_file.read_text(encoding="utf-8")
-            if self.config_file.exists()
+            self._config_file.read_text(encoding="utf-8")
+            if self._config_file.exists()
             else "{}"
         )
 
     @config_file_content.setter
     def config_file_content(self, value: str) -> None:
-        """Set the content of the configuration file."""
-        self.config_file.write_text(value, encoding="utf-8")
+        """Set the content of the configuration file and reload the model."""
+        try:
+            self._sing_box_config = SingBoxConfig.model_validate(json.loads(value))
+            self._sing_box_config.save(self._config_file)
+        except Exception as e:
+            print(f"⚠️ Error parsing new configuration: {e}")
         print("📁 Configuration updated successfully.")
 
     @property
+    def sub_url(self) -> str:
+        """Get the subscription URL from app config."""
+        return self._app_config.subscription_url
+
+    @sub_url.setter
+    def sub_url(self, value: str) -> None:
+        """Set the subscription URL in app config."""
+        self._app_config.subscription_url = value.strip()
+        self._app_config.save(self._app_config_file)
+        print("📁 Subscription updated successfully.")
+
+    @property
     def token_content(self) -> str:
-        """Get the token from the token file."""
-        return self.token_file.read_text().strip() if self.token_file.exists() else ""
+        """Get the token from app config."""
+        return self._app_config.token
 
     @token_content.setter
     def token_content(self, value: str) -> None:
-        """Set the token in the token file."""
-        self.token_file.write_text(value.strip())
+        """Set the token in app config."""
+        self._app_config.token = value.strip()
+        self._app_config.save(self._app_config_file)
         print("🔑 Token added successfully.")
 
     def update_config(self, sub_url: StrOrNone = None, token: StrOrNone = None) -> bool:
@@ -195,7 +264,7 @@ class ConfigHandler:
             new_config = response.text
 
             if not self.is_windows:
-                shutil.chown(self.config_file, user=self.user, group=self.user)
+                shutil.chown(self._config_file, user=self.user, group=self.user)
 
             if self.config_file_content == new_config:
                 print("📄 Configuration is up to date.")
@@ -204,7 +273,7 @@ class ConfigHandler:
                 show_diff_config(self.config_file_content, new_config)
                 self.config_file_content = new_config
 
-            # update subscription url file
+            # Update subscription url file
             if sub_url != self.sub_url:
                 self.sub_url = sub_url
             if token != self.token_content:
