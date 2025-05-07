@@ -4,7 +4,7 @@ from typing import Annotated
 import typer
 
 from ..common import LogLevel, StrOrNone
-from ..config.config import SingBoxConfig
+from ..config.config import ConfigHandler
 from ..service import get_context_obj
 from .client import SingBoxAPIClient
 from .connections import ConnectionsManager
@@ -43,7 +43,7 @@ api = typer.Typer(help="sing-box manager.")
 
 
 def create_client(
-    config: SingBoxConfig, base_url: StrOrNone = None, token: StrOrNone = None
+    config: ConfigHandler, base_url: StrOrNone = None, token: StrOrNone = None
 ) -> SingBoxAPIClient:
     # read from config if not provided
     if base_url is None:

@@ -2,11 +2,11 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from ..config.config import SingBoxConfig
+from ..config.config import ConfigHandler
 
 
 class ServiceManager:
-    def __init__(self, config: SingBoxConfig) -> None:
+    def __init__(self, config: ConfigHandler) -> None:
         self.config = config
 
     @property
@@ -45,7 +45,7 @@ class WindowsServiceManager(ServiceManager):
     binary: https://nssm.cc/builds
     """
 
-    def __init__(self, config: SingBoxConfig) -> None:
+    def __init__(self, config: ConfigHandler) -> None:
         super().__init__(config)
         self.service_name = "sing-box-service"
         self.status_list = ["SERVICE_RUNNING", "SERVICE_STOPPED"]
@@ -187,7 +187,7 @@ class WindowsServiceManager(ServiceManager):
 
 
 class LinuxServiceManager(ServiceManager):
-    def __init__(self, config: SingBoxConfig) -> None:
+    def __init__(self, config: ConfigHandler) -> None:
         super().__init__(config)
         self.service_name = "sing-box"
         self.service_file = Path("/etc/systemd/system/sing-box.service")
@@ -262,7 +262,7 @@ WantedBy=multi-user.target
 
 
 def create_service(
-    config: SingBoxConfig,
+    config: ConfigHandler,
 ) -> WindowsServiceManager | LinuxServiceManager:
     return (
         WindowsServiceManager(config)
