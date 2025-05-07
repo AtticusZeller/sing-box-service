@@ -10,7 +10,7 @@ from ..common import StrOrNone
 from .utils import load_json_asdict, request_get, show_diff_config
 
 
-class SingBoxConfig:
+class ConfigHandler:
     def __init__(self) -> None:
         # Initialize config directories and files based on properties
         self._config_dir = (
@@ -247,9 +247,9 @@ class SingBoxConfig:
         return info
 
 
-def get_config() -> SingBoxConfig:
-    """Get a cached SingBoxConfig instance."""
-    config = SingBoxConfig()
+def get_config() -> ConfigHandler:
+    """Get a cached ConfigHandler instance."""
+    config = ConfigHandler()
     if not config.init_directories():
         raise FileNotFoundError("❌ Failed to initialize directories")
     return config

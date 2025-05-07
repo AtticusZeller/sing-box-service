@@ -4,7 +4,7 @@ from typing import cast
 import typer
 
 from ..common import ClearCacheOption, UpdateConfigOption, ensure_root
-from ..config.config import SingBoxConfig
+from ..config.config import ConfigHandler
 from .manager import LinuxServiceManager, WindowsServiceManager
 
 __all__ = ["service", "SharedContext", "get_context_obj"]
@@ -15,7 +15,7 @@ service = typer.Typer(help="Service management commands")
 
 @dataclass
 class SharedContext:
-    config: SingBoxConfig
+    config: ConfigHandler
     service: WindowsServiceManager | LinuxServiceManager
 
 
