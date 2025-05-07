@@ -214,13 +214,6 @@ class ConfigHandler:
             print(f"❌ Failed to update configuration: {e}")
             return False
 
-    def show_subscription(self) -> None:
-        """Display the current subscription URL."""
-        if self.sub_url:
-            print(f"🔗 Current subscription URL: {self.sub_url}")
-        else:
-            print("❌ No subscription URL found.")
-
     def clear_cache(self) -> None:
         """Remove the cache database file."""
         try:
@@ -239,11 +232,9 @@ class ConfigHandler:
         """Return a string representation of the configuration."""
         info = (
             f"🔧 Using binary: {self.bin_path}\n"
-            f"📄 Using configuration: {self.config_file}"
+            f"📄 Using configuration: {self._config_file}\n"
+            f"💾 Using cache: {self.cache_db}"
         )
-
-        if self.is_windows:
-            info += f"\n📁 Using installation directory: {self.config_dir}"
         return info
 
 
