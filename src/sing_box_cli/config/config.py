@@ -266,6 +266,10 @@ class ConfigHandler:
             if not self.is_windows:
                 shutil.chown(self._config_file, user=self.user, group=self.user)
 
+            # make sure same order of keys to avoid showing wrong diff
+            new_config = self._sing_box_config.model_validate_json(
+                new_config
+            ).model_dump_json(indent=2)
             if self.config_file_content == new_config:
                 print("📄 Configuration is up to date.")
             else:
