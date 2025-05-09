@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.45 - 2025-05-09
+
+### 🐛 Bug Fixes
+
+- Show diff wrong
+
+### 🧪 Testing
+
+- Add test for config.utils
+
+### ⚙️ Miscellaneous Tasks
+
+- Replace json load with pydantic api
+
 ## 0.0.44 - 2025-05-07
 
 ### 🐛 Bug Fixes
