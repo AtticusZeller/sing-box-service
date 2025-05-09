@@ -213,7 +213,7 @@ class ConfigHandler:
     def config_file_content(self, value: str) -> None:
         """Set the content of the configuration file and reload the model."""
         try:
-            self._sing_box_config = SingBoxConfig.model_validate(json.loads(value))
+            self._sing_box_config = SingBoxConfig.model_validate_json(value)
             self._sing_box_config.save(self._config_file)
         except Exception as e:
             print(f"⚠️ Error parsing new configuration: {e}")
