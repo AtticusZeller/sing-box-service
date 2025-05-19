@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.46 - 2025-05-19
+
+### 🐛 Bug Fixes
+
+- Remove grey output
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.11.11
+
 ## 0.0.45 - 2025-05-09
 
 ### 🐛 Bug Fixes
