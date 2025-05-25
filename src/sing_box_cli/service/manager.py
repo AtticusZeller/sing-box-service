@@ -211,18 +211,13 @@ CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIM
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW CAP_NET_BIND_SERVICE CAP_SYS_TIME CAP_SYS_PTRACE CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE
 
 # restart
-Restart=always
-RestartSec=2
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=3
 # start commands
 ExecStart={run_cmd(self.config)}
 ExecReload=/bin/kill -HUP $MAINPID
-# IO
-IOSchedulingPriority=0
-IOSchedulingClass=realtime
-# CPU
-CPUSchedulingPolicy=rr
-CPUSchedulingPriority=99
-Nice=-20
 
 [Install]
 WantedBy=multi-user.target
