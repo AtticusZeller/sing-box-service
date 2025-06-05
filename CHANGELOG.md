@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.47 - 2025-06-05
+
+### 🚜 Refactor
+
+- Remove redundant linux service io/cpu config
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.11.13
+
 ## 0.0.46 - 2025-05-19
 
 ### 🐛 Bug Fixes
