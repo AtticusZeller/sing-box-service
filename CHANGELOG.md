@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.48 - 2025-06-20
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.11.14
+
 ## 0.0.47 - 2025-06-05
 
 ### 🚜 Refactor
