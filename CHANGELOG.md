@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.49 - 2025-07-09
+
+### ⚙️ Miscellaneous Tasks
+
+- Pre-commit autoupdate (#15) in #15
+- Update sing-box binary to version v1.11.15
+
 ## 0.0.48 - 2025-06-20
 
 ### ⚙️ Miscellaneous Tasks
