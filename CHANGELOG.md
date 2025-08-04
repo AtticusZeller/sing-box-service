@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.50 - 2025-08-04
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.12.0
+
 ## 0.0.49 - 2025-07-09
 
 ### ⚙️ Miscellaneous Tasks
