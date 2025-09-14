@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.53 - 2025-09-14
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.12.3
+- Update sing-box binary to version v1.12.4
+- Update sing-box binary to version v1.12.5
+- Update sing-box binary to version v1.12.7
+- *(github-actions)* Bump actions/setup-go from 5 to 6 (#18) in #18
+- Update sing-box binary to version v1.12.8
+
 ## 0.0.52 - 2025-08-21
 
 ### ⚙️ Miscellaneous Tasks
