@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.54 - 2025-10-06
+
+### ⚙️ Miscellaneous Tasks
+
+- *(github-actions)* Bump actions/checkout from 4 to 5 (#17) in #17
+- Update sing-box binary to version v1.12.9
+
 ## 0.0.53 - 2025-09-14
 
 ### ⚙️ Miscellaneous Tasks
