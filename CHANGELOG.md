@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.56 - 2025-10-23
+
+### ⚙️ Miscellaneous Tasks
+
+- *(CI)* Update go version to stable
+- Update sing-box binary to version v1.12.11
+
 ## 0.0.55 - 2025-10-15
 
 ### ⚙️ Miscellaneous Tasks
