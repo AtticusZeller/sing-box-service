@@ -2,4 +2,4 @@ from .main import main
 
 __all__ = ["main"]
 
-__version__ = "0.0.56"
+__version__ = "0.0.57"
