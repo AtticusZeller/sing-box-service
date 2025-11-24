@@ -15,7 +15,7 @@ jobs:
       should_build: ${{ steps.check_version.outputs.should_build }}
       version: ${{ steps.check_version.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Check latest version
         id: check_version
@@ -46,7 +46,7 @@ jobs:
     if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
