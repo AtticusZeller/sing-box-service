@@ -8,6 +8,7 @@ from typing import Self
 import typer
 from pydantic import BaseModel, ConfigDict, Field
 from rich import print
+from sing_box_bin import get_bin_path
 
 from ..common import StrOrNone
 from .utils import request_get, show_diff_config
@@ -135,12 +136,7 @@ class ConfigHandler:
         )
 
         if not bin_path:
-            bin_dir = Path(__file__).parents[1] / "bin"
-            bin_path = (
-                bin_dir / "sing-box"
-                if not self.is_windows
-                else bin_dir / "sing-box.exe"
-            )
+            bin_path = get_bin_path()
         return Path(bin_path).absolute()
 
     @property

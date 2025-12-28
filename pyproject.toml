@@ -12,9 +12,10 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ] # FROM: https://pypi.org/classifiers/
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 license = { file = "LICENSE" }
 authors = [{ name = "A.J.Zeller", email = "hello@atticux.me" }]
 maintainers = [{ name = "A.J.Zeller", email = "hello@atticux.me" }]
@@ -26,6 +27,7 @@ dependencies = [
     "prompt-toolkit>=3.0.50",
     "psutil>=6.1.1",
     "pydantic>=2.10.6",
+    "sing-box-bin>=1.12.12",
     "typer>=0.15.1",
 ]
 
