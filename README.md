@@ -40,11 +40,11 @@ sudo ln -sf $(which sing-box-cli) /usr/local/bin/
 Windows in Admin powershell
 
 ```powershell
-sing-box-cli --help
+sbc --help
 ```
 
 Linux
 
 ```bash
-sudo sing-box-cli --help
+sudo sbc --help
 ```

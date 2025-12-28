@@ -39,6 +39,7 @@ Changelog     = "https://github.com/atticuszz/sing-box-service/blob/main/CHANGEL
 
 [project.scripts] # build-backend config needed
 sing-box-cli = "sing_box_cli:main" # equal to from python import main; then run main()
+sbc = "sing_box_cli:main"          # short alias for convenience
 # FROM: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 
 [tool.uv]
