@@ -33,6 +33,7 @@ Linux
 ```bash
 uv tool install sing-box-cli
 sudo ln -sf $(which sing-box-cli) /usr/local/bin/
+sudo ln -sf $(which sbc) /usr/local/bin/
 ```
 
 ## Run
