@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.1 - 2025-12-28
+
+### 🚀 Features
+
+- Add short alias
+
 ## 0.1.0 - 2025-12-28
 
 ### 🐛 Bug Fixes
