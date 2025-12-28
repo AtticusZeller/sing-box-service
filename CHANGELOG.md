@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.59 - 2025-12-28
+
+### 🐛 Bug Fixes
+
+- Remote repo name
+
+### 🚜 Refactor
+
+- Split sing-box-cli into bin and cli logic package
+
+### ⚙️ Miscellaneous Tasks
+
+- Update sing-box binary to version v1.12.14
+
 ## 0.0.58 - 2025-12-17
 
 ### ⚙️ Miscellaneous Tasks
