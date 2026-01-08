@@ -20,21 +20,34 @@ Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### sing-box
+### sing-box-cli
 
-Windows
-
+Install
 ```powershell
+# windows
 uv tool install sing-box-cli
 ```
 
-Linux
-
 ```bash
+# linux
 uv tool install sing-box-cli
 sudo ln -sf $(which sing-box-cli) /usr/local/bin/
 sudo ln -sf $(which sbc) /usr/local/bin/
 ```
+
+Install with specific sing-box version
+
+```bash
+uv tool install sing-box-cli --with sing-box-bin==x.y.z
+```
+
+Upgrade
+```bash
+uv tool upgrade sing-box-cli
+```
+
+> [!warning]
+> stop service before upgrading in windows
 
 ## Run
 
